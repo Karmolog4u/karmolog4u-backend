@@ -1,24 +1,25 @@
-import { ImageModule } from './image/image.module';
+import { StorageModule } from './storage/storage.module';
 import { DiscountModule } from './admin/products/discount/discount.module';
 import { ProductModule } from './products/product.module';
-// import { MaterialModule } from './material/material.module';
-// import { GroupModule } from './group/group.module';
-// import { AdminUserModule } from './admin/user/admin-user.module';
-// import { AdminModule } from './admin/admin.module';
 import { TokenModule } from './token/token.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  OnModuleInit,
+} from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { getEnvPath } from './common/helper/env.helper';
-// import { RouterModule } from '@nestjs/core';
 import { validate } from './common/helper/env.validation';
 import { LoggerMiddleware } from './common/middleware/logger.middlvare';
-// import { AdminProductModule } from './admin/products/admin-product.module';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import * as path from 'path';
+// import { ServeStaticModule } from '@nestjs/serve-static';
 import { AdminModule } from './admin/admin.module';
+import { MailModule } from './mail/mail.module';
+import { StorageService } from './storage/storage.service';
+import { FilesModule } from './files/files.module';
 
 const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
 
@@ -32,20 +33,29 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
         uri: config.get<string>('MONGO_URL'),
       }),
     }),
-    ServeStaticModule.forRoot({
-      rootPath: path.join(__dirname, '..', 'covers'), // Path to your static files
-      serveRoot: '/covers', // Optional: URL prefix for accessing the files
-    }),
+    StorageModule,
     DiscountModule,
     TokenModule,
     UserModule,
     AuthModule,
     AdminModule,
     ProductModule,
-    ImageModule,
+    MailModule,
+    FilesModule,
+    // ServeStaticModule.forRoot({
+    //   rootPath: 'covers',
+    //   serveRoot: '/covers', // Optional: URL prefix for accessing the files
+    // }),
   ],
 })
-export class AppModule implements NestModule {
+export class AppModule implements NestModule, OnModuleInit {
+  constructor(private readonly storageService: StorageService) {}
+
+  async onModuleInit() {
+    console.log('App Module Initialized');
+    await this.storageService.createStorageFolder(); // Call function on startup
+  }
+
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(LoggerMiddleware).forRoutes('*');
   }

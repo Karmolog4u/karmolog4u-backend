@@ -6,7 +6,7 @@ import {
   GuidesAndBooks,
   GuidesAndBooksSchema,
 } from './schemas/guides_and_books.schema';
-import { Discount, DiscountSchema } from '../discount/schemas/discount.schema';
+// import { Discount, DiscountSchema } from '../discount/schemas/discount.schema';
 import { DiscountModule } from '../discount/discount.module';
 
 @Module({

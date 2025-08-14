@@ -15,10 +15,16 @@ export const refreshTokenSchema = Joi.object()
 
 export const registerUserSchema = Joi.object()
   .keys({
-    fullName: Joi.string().min(1).max(20).required(),
-    // lastName: Joi.string().min(1).max(20).required(),
+    name: Joi.string().min(1).max(20).required(),
+    lastName: Joi.string().min(1).max(20).required(),
     mobPhone: Joi.string().min(1).max(20).required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(8).max(20).required(),
+  })
+  .unknown(false);
+
+export const resetPasswordSchema = Joi.object()
+  .keys({
+    email: Joi.string().email().required(),
   })
   .unknown(false);

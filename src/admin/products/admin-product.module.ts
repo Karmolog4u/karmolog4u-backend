@@ -5,6 +5,7 @@ import { DiscountModule } from './discount/discount.module';
 import { AdminWebinarsModule } from './webinars/admin-webinars.module';
 import { AdminGuidesAndBooksModule } from './guides_and_books/admin-guides_and_books.module';
 import { DeletedModule } from './deleted/deleted.module';
+import { GiftModule } from './gift/gift.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { DeletedModule } from './deleted/deleted.module';
     DiscountModule,
     AdminWebinarsModule,
     AdminGuidesAndBooksModule,
+    GiftModule,
     DeletedModule,
   ],
   controllers: [AdminProductController],

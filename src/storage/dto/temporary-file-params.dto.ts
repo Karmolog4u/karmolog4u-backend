@@ -1,0 +1,11 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString } from 'class-validator';
+
+export class TemporaryFileParamsDto {
+  @ApiProperty({
+    description: 'Name of the file',
+    example: 'profile-picture.jpg',
+  })
+  @IsString()
+  file: string;
+}

@@ -5,13 +5,19 @@ export class UpdateUserDto {
   User's first name
   @example "John Johnson"
   */
-  fullName: string;
+  name?: string;
 
   /**
-  User's email
-  @example "example@mail.com"
+  User's first name
+  @example "John Johnson"
   */
-  email: string;
+  lastName?: string;
+
+  // /**
+  // User's email
+  // @example "example@mail.com"
+  // */
+  // email?: string;
 
   // /**
   // User's last name
@@ -23,7 +29,7 @@ export class UpdateUserDto {
   User's phone number
   @example "+1 1234567890"
   */
-  mobPhone: string;
+  mobPhone?: string;
 
   // /**
   // URL of user's avatar image
@@ -35,7 +41,7 @@ export class UpdateUserDto {
   User's role(s)
   @example ["admin"]
   */
-  role: Role[];
+  role?: Role[];
 
   // /**
   // User's supplied items
@@ -47,29 +53,43 @@ export class UpdateUserDto {
   Indicates if the user is banned
   @example true
   */
-  banned: boolean;
+  banned?: boolean;
 
   /**
   Indicates if the user is move to delete
   @example true
   */
-  toDelete: boolean;
+  toDelete?: boolean;
+
+  // /**
+  // Indicates when user is created
+  // @example true
+  // */
+  // createdAt: string;
+
+  // /**
+  // Indicates when user is updated
+  // @example true
+  // */
+  // updatedAt: string;
 
   /**
-  Indicates when user is created
-  @example true
+  Indicates if the user is banned
+  @example 'created date'
   */
-  createdAt: string;
+  // createdAt: string;
+  verified?: boolean;
 
   /**
-  Indicates when user is updated
-  @example true
+  Indicates if the user is banned
+  @example 'updated date'
   */
-  updatedAt: string;
+  // updatedAt: string;
 
+  lastLogin?: Date;
   /**
   Indicates when user is deleted
   @example true
   */
-  expiredAt: Date;
+  expiredAt?: Date;
 }

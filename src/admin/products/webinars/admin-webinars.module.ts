@@ -3,7 +3,7 @@ import { AdminWebinarsController } from './admin-webinars.controller';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Webinar, WebinarSchema } from './schemas/webinars.schema';
-import { Discount, DiscountSchema } from '../discount/schemas/discount.schema';
+// import { Discount, DiscountSchema } from '../discount/schemas/discount.schema';
 import { DiscountModule } from '../discount/discount.module';
 
 @Module({

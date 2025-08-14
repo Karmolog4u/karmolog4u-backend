@@ -10,9 +10,15 @@ export class UserEntity {
 
   /**
   User's first name
-  @example "John"
+  @example "John Johnson"
   */
-  fullName: string;
+  name: string;
+
+  /**
+  User's first name
+  @example "John Johnson"
+  */
+  lastName: string;
 
   /**
   User's email
@@ -72,13 +78,16 @@ export class UserEntity {
   Indicates if the user is banned
   @example 'created date'
   */
-  createdAt: string;
+  // createdAt: string;
+  verified: boolean;
 
   /**
   Indicates if the user is banned
   @example 'updated date'
   */
-  updatedAt: string;
+  // updatedAt: string;
+
+  lastLogin: Date;
 
   /**
   Indicates when user is deleted

@@ -24,7 +24,20 @@ export class TokenEntity {
   User's accessToken
   @example "example@mail.com"
   */
-  deviceId: string;
+
+  platform: string;
+
+  /**
+  User's accessToken
+  @example "example@mail.com"
+  */
+  userAgent: string;
+
+  /**
+  User's accessToken
+  @example "example@mail.com"
+  */
+  ip: string;
 
   /**
   User's refreshToken

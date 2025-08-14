@@ -3,7 +3,9 @@ import { Types } from 'mongoose';
 export class NewTokenDto {
   accessToken: string;
   refreshToken: string;
-  deviceId: string;
+  platform: string;
+  userAgent: string;
+  ip: string;
   owner: Types.ObjectId;
   expiredAt: Date;
 }

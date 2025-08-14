@@ -13,6 +13,9 @@ import { GetAllResponseDto } from './dto/get-all.dto';
 import { RestoreDto } from './dto/restore.dto';
 import { ResponseSuccessDto } from 'src/common/dto/response-success.dto';
 import { DeleteForeverDto } from './dto/delete-forever.dto';
+import { PromoCodeService } from 'src/admin/promo-code/promo-code.service';
+import { PaginationDto } from './dto/pagination.dto';
+import { Gift } from '../gift/schemas/gift.schema';
 
 @Injectable()
 export class DeletedService {
@@ -22,14 +25,14 @@ export class DeletedService {
     @InjectModel(Discount.name) private discountModel: Model<Discount>,
     @InjectModel(GuidesAndBooks.name)
     private guidesAndBooksModel: Model<GuidesAndBooks>,
+    @InjectModel(Gift.name) private giftModel: Model<Gift>,
+    private promoCodeService: PromoCodeService,
     @InjectConnection() private readonly connection: Connection,
   ) {}
-  async getAll(
-    searchQuery: string,
-    page: number,
-    limit: number,
-  ): Promise<GetAllResponseDto[]> {
+  async getAll(query: PaginationDto): Promise<GetAllResponseDto[]> {
     try {
+      const page = +query.page || 1;
+      const limit = +query.limit || 10;
       const skip = (page - 1) * limit;
 
       return await this.webinarModel.aggregate([
@@ -97,15 +100,40 @@ export class DeletedService {
             ], // Filter for guides and books
           },
         },
+        {
+          $unionWith: {
+            coll: 'gifts', // Union with the 'guidesandbooks' collection
+            pipeline: [
+              { $match: { toDelete: true } },
+              {
+                $addFields: {
+                  section: 'Подарунки',
+                  collection: 'gifts',
+                }, // Add the collection name to each document
+              },
+              {
+                $project: {
+                  id: '$_id', // Змінюємо назву поля _id на id
+                  category: '-',
+                  'name.uk': 1,
+                  expiredAt: 1,
+                  section: 1,
+                  collection: 1,
+                  _id: 0, // Прибираємо оригінальне поле _id
+                },
+              },
+            ], // Filter for guides and books
+          },
+        },
         // Add the $search stage for searchQuery (if provided)
-        ...(searchQuery
+        ...(query.searchQuery
           ? [
               {
                 $match: {
                   $or: [
-                    { 'name.ru': { $regex: searchQuery, $options: 'i' } }, // Пошук в "name.ru"
-                    { 'name.uk': { $regex: searchQuery, $options: 'i' } }, // Пошук в "name.uk"
-                    { section: { $regex: searchQuery, $options: 'i' } },
+                    { 'name.ru': { $regex: query.searchQuery, $options: 'i' } }, // Пошук в "name.ru"
+                    { 'name.uk': { $regex: query.searchQuery, $options: 'i' } }, // Пошук в "name.uk"
+                    { section: { $regex: query.searchQuery, $options: 'i' } },
                   ],
                 },
               },
@@ -137,7 +165,7 @@ export class DeletedService {
   }
   async restoreProducts(data: RestoreDto[]): Promise<ResponseSuccessDto> {
     try {
-      const { webinars, meditation, guidesAndBooks } = data.reduce(
+      const { webinars, meditation, guidesAndBooks, gifts } = data.reduce(
         (acc, item) => {
           if (item.collection === 'webinars') {
             acc.webinars.push(new mongoose.Types.ObjectId(item.id.toString()));
@@ -149,13 +177,17 @@ export class DeletedService {
             acc.guidesAndBooks.push(
               new mongoose.Types.ObjectId(item.id.toString()),
             );
+          } else if (item.collection === 'gifts') {
+            acc.gifts.push(new mongoose.Types.ObjectId(item.id.toString()));
           }
+
           return acc;
         },
         {
           webinars: [],
           meditation: [],
           guidesAndBooks: [],
+          gifts: [],
         },
       );
 
@@ -183,6 +215,14 @@ export class DeletedService {
           },
         );
       }
+      if (gifts.length !== 0) {
+        await this.giftModel.updateMany(
+          { _id: { $in: guidesAndBooks } },
+          {
+            $set: { toDelete: false },
+          },
+        );
+      }
       return { message: 'success' };
     } catch (error) {
       throw new BadRequestException('щось пішло не так');
@@ -191,7 +231,7 @@ export class DeletedService {
 
   async deleteProducts(data: DeleteForeverDto[]): Promise<ResponseSuccessDto> {
     try {
-      const { webinars, meditation, guidesAndBooks } = data.reduce(
+      const { webinars, meditation, guidesAndBooks, gifts } = data.reduce(
         (acc, item) => {
           if (item.collection === 'webinars') {
             acc.webinars.push(new mongoose.Types.ObjectId(item.id.toString()));
@@ -203,6 +243,8 @@ export class DeletedService {
             acc.guidesAndBooks.push(
               new mongoose.Types.ObjectId(item.id.toString()),
             );
+          } else if (item.collection === 'gifts') {
+            acc.gifts.push(new mongoose.Types.ObjectId(item.id.toString()));
           }
           return acc;
         },
@@ -210,6 +252,7 @@ export class DeletedService {
           webinars: [],
           meditation: [],
           guidesAndBooks: [],
+          gifts: [],
         },
       );
 
@@ -220,6 +263,7 @@ export class DeletedService {
             $set: { toDelete: false },
           },
         );
+        await this.promoCodeService.deleteByRefIdPromoCodes(webinars);
       }
       if (meditation.length !== 0) {
         await this.meditationModel.deleteMany(
@@ -228,6 +272,7 @@ export class DeletedService {
             $set: { toDelete: false },
           },
         );
+        await this.promoCodeService.deleteByRefIdPromoCodes(meditation);
       }
       if (guidesAndBooks.length !== 0) {
         await this.guidesAndBooksModel.deleteMany(
@@ -236,6 +281,16 @@ export class DeletedService {
             $set: { toDelete: false },
           },
         );
+        await this.promoCodeService.deleteByRefIdPromoCodes(guidesAndBooks);
+      }
+      if (gifts.length !== 0) {
+        await this.giftModel.deleteMany(
+          { _id: { $in: gifts } },
+          {
+            $set: { toDelete: false },
+          },
+        );
+        await this.promoCodeService.deleteByRefIdPromoCodes(gifts);
       }
       return { message: 'success' };
     } catch (error) {

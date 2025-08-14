@@ -9,7 +9,7 @@ import {
   MeditationSchema,
 } from 'src/products/meditations/schemas/meditation.schema';
 import { DiscountModule } from '../discount/discount.module';
-import { Discount, DiscountSchema } from '../discount/schemas/discount.schema';
+// import { Discount, DiscountSchema } from '../discount/schemas/discount.schema';
 
 @Module({
   imports: [

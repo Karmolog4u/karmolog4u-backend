@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   CanActivate,
   ExecutionContext,
   Injectable,
@@ -38,7 +39,7 @@ export class AuthGuard implements CanActivate {
     const secret = this.configService.get<string>('JWT_SECRET');
 
     if (!token) {
-      throw new UnauthorizedException();
+      throw new BadRequestException();
     }
     try {
       await this.jwtService.verifyAsync(token, {
@@ -56,7 +57,7 @@ export class AuthGuard implements CanActivate {
       request['user'] = user;
       request['accessToken'] = token;
     } catch {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Неавторизований');
     }
     return true;
   }

@@ -12,6 +12,6 @@ import { ConfigModule } from '@nestjs/config';
   ],
   controllers: [],
   providers: [TokenService],
-  exports: [TokenService],
+  exports: [TokenService, MongooseModule],
 })
 export class TokenModule {}

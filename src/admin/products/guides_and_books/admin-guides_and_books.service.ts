@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -229,6 +230,30 @@ export class AdminGuidesAndBooksService {
       return { message: 'Успішно' };
     } catch (error) {
       throw new BadRequestException(error._message + ', Mongo DB');
+    }
+  }
+
+  async getGuidesAndBooksList() {
+    try {
+      return this.guidesAndBooksModel.aggregate([
+        {
+          $match: {
+            toDelete: false,
+            status: 'PUBLISHED',
+          },
+        },
+        {
+          $project: {
+            id: '$_id',
+            name: '$name.uk',
+            _id: 0,
+          },
+        },
+      ]);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Не вдалося отримати список гайдів та книг',
+      );
     }
   }
 }

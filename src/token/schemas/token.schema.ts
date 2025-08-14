@@ -32,9 +32,19 @@ export class Token {
 
   @Prop({
     type: String,
-    required: [true, 'deviceId is required'],
+    required: [true, 'platform is required'],
   })
-  deviceId: string;
+  platform: string;
+  @Prop({
+    type: String,
+    required: [true, 'platform is required'],
+  })
+  userAgent: string;
+  @Prop({
+    type: String,
+    required: [true, 'platform is required'],
+  })
+  ip: string;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,

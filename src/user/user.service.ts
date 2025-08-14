@@ -1,4 +1,3 @@
-import { ResponseSuccessDto } from './dto/response-success.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserIdDto } from './dto/user-id.dto';
@@ -19,19 +18,21 @@ export class UserService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async findUserById(userData: FindUserByIdDto): Promise<UserResponseDto> {
-    const user = await this.userModel.findOne({ ...userData });
-    if (!user) {
-      throw new NotFoundException('User not found');
+    try {
+      const user = await this.userModel.findOne({ ...userData });
+      return user;
+    } catch (error) {
+      throw new NotFoundException('Користувача не знайдено');
     }
-    return user;
   }
 
   async findUserByEmail(userData: FindUserByEmailDto): Promise<UserEntity> {
-    const user = await this.userModel.findOne({ ...userData });
-    if (!user) {
-      throw new NotFoundException('User not found');
+    try {
+      const user = await this.userModel.findOne({ ...userData }).exec();
+      return user;
+    } catch (error) {
+      throw new NotFoundException('Користувача не знайдено');
     }
-    return user;
   }
 
   async findAllUser(): Promise<UserEntity[]> {
@@ -42,29 +43,45 @@ export class UserService {
     return users;
   }
 
-  async newUser(userData: NewUserDto): Promise<ResponseSuccessDto> {
-    const user = new this.userModel(userData);
-    await user.save();
-    if (!user) {
-      throw new BadRequestException('User conflict');
+  async newUser(userData: NewUserDto) {
+    try {
+      const user = new this.userModel(userData);
+      await user.save();
+      return user;
+    } catch (error) {
+      throw new BadRequestException('Email вже зареєстрований!');
     }
-    return { message: 'success' };
   }
 
   async updateUser(
     _id: UserIdDto,
     userData: UpdateUserDto,
   ): Promise<UserResponseDto> {
-    const user = await this.userModel.findByIdAndUpdate(
-      _id,
-      {
-        $set: userData,
-      },
-      { new: true, projection: { _id: 0 } },
-    );
-    if (!user) {
-      throw new NotFoundException('User not found');
+    try {
+      const user = await this.userModel.findByIdAndUpdate(
+        _id,
+        {
+          $set: userData,
+        },
+        { new: true, projection: { _id: 0 } },
+      );
+      return user;
+    } catch (error) {}
+    throw new BadRequestException('Помилка оновлення користувача');
+  }
+
+  async updateUserPassword(_id: UserIdDto, password: string) {
+    try {
+      const user = await this.userModel.findByIdAndUpdate(
+        _id,
+        {
+          $set: { password },
+        },
+        { new: true, projection: { _id: 0 } },
+      );
+      return user;
+    } catch (error) {
+      throw new BadRequestException('Помилка оновлення паролю');
     }
-    return user;
   }
 }

@@ -42,15 +42,9 @@ export class DeletedController {
     type: [GetAllResponseDto],
   })
   @ApiResponse({ status: 400, description: 'something wrong' })
-  async getAll(
-    @Query() paginationDto: PaginationDto,
-  ): Promise<GetAllResponseDto[]> {
+  async getAll(@Query() query: PaginationDto): Promise<GetAllResponseDto[]> {
     try {
-      return await this.deletedService.getAll(
-        paginationDto.searchQuery,
-        +paginationDto.page,
-        +paginationDto.limit,
-      );
+      return await this.deletedService.getAll(query);
     } catch (error) {
       throw new HttpException(
         {
