@@ -10,7 +10,7 @@ import { DiscountModule } from 'src/admin/products/discount/discount.module';
 import { PromoCodeModule } from 'src/admin/promo-code/promo-code.module';
 import { CourseModule } from 'src/user/education/course.module';
 import { CoursePurchaseModule } from 'src/coursePurchase/coursePurchase.module';
-import { RedisPubsubModule } from 'src/redis/redis-pubsub.module';
+// import { RedisPubsubModule } from 'src/redis/redis-pubsub.module';
 
 @Module({
   imports: [
@@ -24,7 +24,7 @@ import { RedisPubsubModule } from 'src/redis/redis-pubsub.module';
     PromoCodeModule,
     CourseModule,
     CoursePurchaseModule,
-    RedisPubsubModule,
+    // RedisPubsubModule,
   ],
   providers: [PaymentsService],
   controllers: [PaymentsController],

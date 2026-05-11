@@ -22,7 +22,7 @@ import { CourseService } from 'src/user/education/course.service';
 import { CoursePurchaseService } from 'src/coursePurchase/coursePurchase.service';
 import { UserEntity } from 'src/user/dto/user-entity.dto';
 import { PaymentStatus } from './emun/payment-status.enum';
-import { RedisPubSubService } from 'src/redis/redis-pubsub.service';
+// import { RedisPubSubService } from 'src/redis/redis-pubsub.service';
 import { Observable } from 'rxjs';
 import { v4 as uuid } from 'uuid';
 
@@ -55,7 +55,7 @@ export class PaymentsService {
     private readonly promoCodeService: PromoCodeService,
     private readonly courseService: CourseService,
     private readonly coursePurchaseService: CoursePurchaseService,
-    private readonly redis: RedisPubSubService,
+    // private readonly redis: RedisPubSubService,
     private readonly configService: ConfigService,
   ) {
     this.merchantAccount = this.configService.getOrThrow('WFP_MERCHANT');
@@ -208,65 +208,65 @@ export class PaymentsService {
     };
   }
 
-  async handleCallback(data: any) {
-    const purchase = await this.purchaseModel.findOne({
-      orderReference: data.orderReference,
-    });
-    if (!purchase) {
-      throw new BadRequestException('Order not found');
-    }
+  // async handleCallback(data: any) {
+  //   const purchase = await this.purchaseModel.findOne({
+  //     orderReference: data.orderReference,
+  //   });
+  //   if (!purchase) {
+  //     throw new BadRequestException('Order not found');
+  //   }
 
-    const isValid = this.verifyCallbackSignature(data);
+  //   const isValid = this.verifyCallbackSignature(data);
 
-    if (!isValid) {
-      return {
-        status: 'error',
-        reason: 'Invalid signature',
-      };
-    }
-    const orderReference = data.orderReference;
+  //   if (!isValid) {
+  //     return {
+  //       status: 'error',
+  //       reason: 'Invalid signature',
+  //     };
+  //   }
+  //   const orderReference = data.orderReference;
 
-    const status =
-      data.transactionStatus === 'Approved'
-        ? PaymentStatus.Approved
-        : PaymentStatus.Declined;
+  //   const status =
+  //     data.transactionStatus === 'Approved'
+  //       ? PaymentStatus.Approved
+  //       : PaymentStatus.Declined;
 
-    purchase.transactionStatus = data.transactionStatus;
-    purchase.rawResponse = data;
-    purchase.processed = true;
+  //   purchase.transactionStatus = data.transactionStatus;
+  //   purchase.rawResponse = data;
+  //   purchase.processed = true;
 
-    switch (data.transactionStatus) {
-      case 'Approved':
-        purchase.status = PurchaseStatus.APPROVED;
-        break;
-      case 'Declined':
-        purchase.status = PurchaseStatus.DECLINED;
-        break;
-    }
+  //   switch (data.transactionStatus) {
+  //     case 'Approved':
+  //       purchase.status = PurchaseStatus.APPROVED;
+  //       break;
+  //     case 'Declined':
+  //       purchase.status = PurchaseStatus.DECLINED;
+  //       break;
+  //   }
 
-    await purchase.save();
+  //   await purchase.save();
 
-    await this.processBusinessLogic(purchase);
+  //   await this.processBusinessLogic(purchase);
 
-    await this.redis.publish(`payment:${orderReference}`, {
-      orderReference,
-      status,
-      paid: status === PaymentStatus.Approved,
-    });
+  //   await this.redis.publish(`payment:${orderReference}`, {
+  //     orderReference,
+  //     status,
+  //     paid: status === PaymentStatus.Approved,
+  //   });
 
-    const time = Math.floor(Date.now() / 1000);
+  //   const time = Math.floor(Date.now() / 1000);
 
-    return {
-      orderReference,
-      status: 'accept',
-      time,
-      signature: this.generateCallbackResponseSignature(
-        orderReference,
-        'accept',
-        time,
-      ),
-    };
-  }
+  //   return {
+  //     orderReference,
+  //     status: 'accept',
+  //     time,
+  //     signature: this.generateCallbackResponseSignature(
+  //       orderReference,
+  //       'accept',
+  //       time,
+  //     ),
+  //   };
+  // }
 
   async createCourseSSKPayment(dto: any, user: UserEntity) {
     // search course by id
@@ -458,43 +458,43 @@ export class PaymentsService {
     };
   }
 
-  sse(orderReference: string): Observable<MessageEvent> {
-    return new Observable<MessageEvent>((observer) => {
-      const channel = `payment:${orderReference}`;
-      let unsubscribe: (() => Promise<void>) | null = null;
+  // sse(orderReference: string): Observable<MessageEvent> {
+  //   return new Observable<MessageEvent>((observer) => {
+  //     const channel = `payment:${orderReference}`;
+  //     let unsubscribe: (() => Promise<void>) | null = null;
 
-      this.redis
-        .subscribe(channel, (payload) => {
-          observer.next({
-            data: payload,
-          } as MessageEvent);
+  //     this.redis
+  //       .subscribe(channel, (payload) => {
+  //         observer.next({
+  //           data: payload,
+  //         } as MessageEvent);
 
-          if (payload.status !== PaymentStatus.Pending) {
-            observer.complete();
-          }
-        })
-        .then((unsub) => {
-          unsubscribe = unsub;
-        });
+  //         if (payload.status !== PaymentStatus.Pending) {
+  //           observer.complete();
+  //         }
+  //       })
+  //       .then((unsub) => {
+  //         unsubscribe = unsub;
+  //       });
 
-      const heartbeat = setInterval(() => {
-        observer.next({
-          data: {
-            type: 'ping',
-            time: Date.now(),
-          },
-        } as MessageEvent);
-      }, 15000);
+  //     const heartbeat = setInterval(() => {
+  //       observer.next({
+  //         data: {
+  //           type: 'ping',
+  //           time: Date.now(),
+  //         },
+  //       } as MessageEvent);
+  //     }, 15000);
 
-      return () => {
-        clearInterval(heartbeat);
+  //     return () => {
+  //       clearInterval(heartbeat);
 
-        if (unsubscribe) {
-          unsubscribe();
-        }
-      };
-    });
-  }
+  //       if (unsubscribe) {
+  //         unsubscribe();
+  //       }
+  //     };
+  //   });
+  // }
 
   private verifyCallbackSignature(body: any): boolean {
     const signatureString = [
