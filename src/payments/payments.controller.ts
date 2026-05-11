@@ -24,23 +24,23 @@ export class PaymentsController {
     return this.service.createPayment(body, user);
   }
 
-  @Post('education/createSSK')
-  @ApiOperation({ summary: 'Create payment for education' })
-  @ApiBody({ type: CreatePaymentDto })
-  @ApiResponse({ status: 201, description: 'Payment created successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid data' })
-  createSSK(@Body() dto: CreatePaymentDto, @User() user?: UserEntity) {
-    return this.service.createCourseSSKPayment(dto, user);
-  }
+  // @Post('education/createSSK')
+  // @ApiOperation({ summary: 'Create payment for education' })
+  // @ApiBody({ type: CreatePaymentDto })
+  // @ApiResponse({ status: 201, description: 'Payment created successfully' })
+  // @ApiResponse({ status: 400, description: 'Invalid data' })
+  // createSSK(@Body() dto: CreatePaymentDto, @User() user?: UserEntity) {
+  //   return this.service.createCourseSSKPayment(dto, user);
+  // }
 
-  @Post('education/createCONS_ADV')
-  @ApiOperation({ summary: 'Create payment for education' })
-  @ApiBody({ type: CreatePaymentDto })
-  @ApiResponse({ status: 201, description: 'Payment created successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid data' })
-  createCONS_ADV(@Body() dto: CreatePaymentDto, @User() user?: UserEntity) {
-    return this.service.createCONS_ADVPayment(dto, user);
-  }
+  // @Post('education/createCONS_ADV')
+  // @ApiOperation({ summary: 'Create payment for education' })
+  // @ApiBody({ type: CreatePaymentDto })
+  // @ApiResponse({ status: 201, description: 'Payment created successfully' })
+  // @ApiResponse({ status: 400, description: 'Invalid data' })
+  // createCONS_ADV(@Body() dto: CreatePaymentDto, @User() user?: UserEntity) {
+  //   return this.service.createCONS_ADVPayment(dto, user);
+  // }
 
   // @Post('callback')
   // @ApiOperation({ summary: 'Payment provider callback (WayForPay)' })
@@ -50,15 +50,15 @@ export class PaymentsController {
   //   return this.service.handleCallback(body);
   // }
 
-  @Get(':orderReference/status')
-  status(@Param('orderReference') orderReference: string) {
-    return this.service.getStatus(orderReference);
-  }
+  // @Get(':orderReference/status')
+  // status(@Param('orderReference') orderReference: string) {
+  //   return this.service.getStatus(orderReference);
+  // }
 
-//   @Sse('sse/:orderReference')
-//   sse(
-//     @Param('orderReference') orderReference: string,
-//   ): Observable<MessageEvent> {
-//     return this.service.sse(orderReference);
-//   }
+  //   @Sse('sse/:orderReference')
+  //   sse(
+  //     @Param('orderReference') orderReference: string,
+  //   ): Observable<MessageEvent> {
+  //     return this.service.sse(orderReference);
+  //   }
 }
