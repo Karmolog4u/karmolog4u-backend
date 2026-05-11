@@ -55,10 +55,10 @@ export class PaymentsController {
     return this.service.getStatus(orderReference);
   }
 
-  @Sse('sse/:orderReference')
-  sse(
-    @Param('orderReference') orderReference: string,
-  ): Observable<MessageEvent> {
-    return this.service.sse(orderReference);
-  }
-}
+//   @Sse('sse/:orderReference')
+//   sse(
+//     @Param('orderReference') orderReference: string,
+//   ): Observable<MessageEvent> {
+//     return this.service.sse(orderReference);
+//   }
+// }
