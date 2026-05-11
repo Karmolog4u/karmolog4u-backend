@@ -42,13 +42,13 @@ export class PaymentsController {
     return this.service.createCONS_ADVPayment(dto, user);
   }
 
-  @Post('callback')
-  @ApiOperation({ summary: 'Payment provider callback (WayForPay)' })
-  @ApiBody({ type: PaymentCallbackDto })
-  @ApiResponse({ status: 200, description: 'Callback processed' })
-  callback(@Body() body: PaymentCallbackDto) {
-    return this.service.handleCallback(body);
-  }
+  // @Post('callback')
+  // @ApiOperation({ summary: 'Payment provider callback (WayForPay)' })
+  // @ApiBody({ type: PaymentCallbackDto })
+  // @ApiResponse({ status: 200, description: 'Callback processed' })
+  // callback(@Body() body: PaymentCallbackDto) {
+  //   return this.service.handleCallback(body);
+  // }
 
   @Get(':orderReference/status')
   status(@Param('orderReference') orderReference: string) {
