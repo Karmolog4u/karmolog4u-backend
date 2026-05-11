@@ -5,19 +5,25 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Discount } from '../discount/schemas/discount.schema';
 import { IdDto } from 'src/common/dto/id.dto';
 import { ResponseSuccessDto } from 'src/common/dto/response-success.dto';
 import { GuidesAndBooks } from './schemas/guides_and_books.schema';
 import { GuidesAndBooksEntity } from './dto/guides_and_books-entity.dto';
 import { ChangeStatusGuidesAndBooksDto } from './dto/change-status-guides_and_books.dto';
+import { StorageService } from 'src/storage/storage.service';
+import { attachTargetToFiles } from 'src/common/helper/attachTargetToFiles';
+import { FilesService } from 'src/files/files.service';
+import { getDifference } from 'src/common/helper/getDifferenceArray';
 
 @Injectable()
 export class AdminGuidesAndBooksService {
   constructor(
     @InjectModel(GuidesAndBooks.name)
     private guidesAndBooksModel: Model<GuidesAndBooks>,
+    private readonly storageService: StorageService,
+    private readonly filesService: FilesService,
     @InjectModel(Discount.name) private discountModel: Model<Discount>,
   ) {}
 
@@ -99,38 +105,65 @@ export class AdminGuidesAndBooksService {
       const response = await this.guidesAndBooksModel
         .aggregate([
           {
-            $match: { _id: guidesAndBooksId }, // Знаходимо користувача за _id
+            $match: { _id: guidesAndBooksId },
           },
+          // 🔹 lookup для знижки
           {
             $lookup: {
-              from: 'discounts', // Назва другої колекції
-              localField: '_id', // Поле в першій колекції
-              foreignField: 'refId', // Поле у другій колекції
-              as: 'discount', // Ім'я поля для результату
+              from: 'discounts',
+              localField: '_id',
+              foreignField: 'refId',
+              as: 'discount',
               pipeline: [
                 {
                   $project: {
-                    // Вибір конкретних полів
-                    _id: 0, // Виключити _id
-                    start: 1, // Залишити поле product
-                    expiredAt: 1, // Залишити поле price
+                    _id: 0,
+                    start: 1,
+                    expiredAt: 1,
                     discount: 1,
                   },
                 },
               ],
             },
           },
+          // 🔹 lookup для файлу
+          {
+            $lookup: {
+              from: 'files',
+              localField: 'file',
+              foreignField: '_id',
+              as: 'fileData',
+              pipeline: [
+                {
+                  $project: {
+                    _id: 0,
+                    savedName: 1,
+                    originalName: 1,
+                  },
+                },
+              ],
+            },
+          },
+          // 🔹 формуємо поля
           {
             $addFields: {
               discount: {
                 $cond: {
-                  if: { $gt: [{ $size: '$discount' }, 0] }, // Якщо масив не порожній
+                  if: { $gt: [{ $size: '$discount' }, 0] },
                   then: { $arrayElemAt: ['$discount', 0] },
+                  else: null,
+                },
+              },
+              file: {
+                $cond: {
+                  if: { $gt: [{ $size: '$fileData' }, 0] },
+                  then: { $arrayElemAt: ['$fileData', 0] }, // { savedName, originalName }
                   else: null,
                 },
               },
             },
           },
+          // 🔹 фінальний проєкт
           {
             $project: {
               _id: 1,
@@ -142,17 +175,19 @@ export class AdminGuidesAndBooksService {
               cover: 1,
               price: 1,
               isWaiting: 1,
+              file: 1, // { savedName, originalName }
               discount: {
                 $cond: {
-                  if: { $ne: ['$discount', null] }, // Якщо discount не дорівнює null
-                  then: '$discount', // Залишити поле
-                  else: '$$REMOVE', // Виключити поле з результату
+                  if: { $ne: ['$discount', null] },
+                  then: '$discount',
+                  else: '$$REMOVE',
                 },
               },
             },
           },
         ])
         .exec();
+
       if (!response[0]) {
         throw new Error();
       }
@@ -166,10 +201,67 @@ export class AdminGuidesAndBooksService {
     guidesAndBooksData: any,
   ): Promise<GuidesAndBooksEntity> {
     try {
-      const newGuidesAndBooks = new this.guidesAndBooksModel(
-        guidesAndBooksData,
-      );
+      const { file, ...guides } = guidesAndBooksData;
+      const newGuidesAndBooks = new this.guidesAndBooksModel(guides);
       await newGuidesAndBooks.save();
+      if (!newGuidesAndBooks) {
+        throw new Error('Помилка створення гайду');
+      }
+
+      const folderPath = await this.storageService.createProductStorage(
+        newGuidesAndBooks._id.toString(),
+      );
+
+      const updateData: Record<string, any> = {};
+
+      if (file) {
+        console.log(file, 'file');
+
+        //check exist
+        const existingFiles = await this.storageService.filterExistingFiles([
+          file,
+        ]);
+        console.log(existingFiles, 'ex');
+
+        if (existingFiles.length > 0) {
+          const files = await this.storageService.copyFiles(
+            folderPath,
+            existingFiles,
+          );
+          console.log(files, 'fil');
+
+          //delete from temporary folder
+          await this.storageService.deleteFiles(process.cwd(), existingFiles);
+          console.log('delete');
+
+          //add to array lesson id
+          const filesToSave = attachTargetToFiles(
+            files,
+            'GuidesAndBooks',
+            newGuidesAndBooks._id,
+          );
+          console.log(filesToSave, 'filetosave');
+
+          //create file documents
+          const savedFiles = await this.filesService.createFiles(filesToSave);
+          console.log(savedFiles, 'saved');
+
+          //get ids to save in db lesson
+          const ids = savedFiles.map((item) => item._id.toString());
+          console.log(ids, 'ids');
+
+          //save to lesson
+          updateData.file = ids[0];
+        }
+      }
+
+      await this.guidesAndBooksModel.updateOne(
+        { _id: newGuidesAndBooks._id },
+        {
+          $set: { ...updateData },
+        },
+      );
+
       return newGuidesAndBooks;
     } catch (error) {
       throw new BadRequestException(error._message + ', Mongo DB');
@@ -179,16 +271,97 @@ export class AdminGuidesAndBooksService {
   async editGuidesAndBooks(
     guidesAndBooksData: any,
     guidesAndBooksId: IdDto,
-  ): Promise<GuidesAndBooksEntity> {
+  ): Promise<any> {
     try {
-      return await this.guidesAndBooksModel
-        .findOneAndUpdate({ _id: guidesAndBooksId }, guidesAndBooksData, {
-          new: true,
-          projection: { __v: 0, createdAt: 0, updatedAt: 0 },
-        })
-        .lean()
-        .exec();
+      const { file, ...guides } = guidesAndBooksData;
+
+      const oldGuide = await this.guidesAndBooksModel
+        .findById(guidesAndBooksId)
+        .lean();
+      if (!oldGuide) {
+        throw new NotFoundException('Гайд не знайдено :(');
+      }
+
+      const updateData: Record<string, any> = {
+        file: Types.ObjectId,
+      }; // Store all updates
+
+      await this.guidesAndBooksModel.findByIdAndUpdate(
+        guidesAndBooksId,
+        guides,
+        {
+          new: true, // Return the updated document
+          runValidators: true, // Run validation checks
+        },
+      );
+
+      const oldFiles = await this.filesService.getFilesByIds([oldGuide.file]);
+
+      const differenceFiles = getDifference(oldFiles, [file]);
+
+      // if (differenceHomeworkFiles.inBoth.length != 0) {
+      //   const oldFilesIds = differenceHomeworkFiles.inBoth.map((item) =>
+      //     item._id.toString(),
+      //   );
+      //   //save to lesson
+      //   updateData.homeworkFiles = [...oldFilesIds];
+      // }
+
+      if (differenceFiles.onlyInArr1.length != 0) {
+        //delete from storage
+        await this.storageService.deleteFiles(
+          this.storageService.getStoragePath(),
+          differenceFiles.onlyInArr1,
+        );
+        //delete from db
+        const fileIds = differenceFiles.onlyInArr1.map((i) => i._id);
+
+        //remove from db
+        await this.filesService.deleteFiles(fileIds);
+      }
+
+      //add files to lesson folder if exist
+      if (differenceFiles.onlyInArr2.length != 0) {
+        const existingFiles = await this.storageService.filterExistingFiles(
+          differenceFiles.onlyInArr2,
+        );
+
+        //if file exist -> copy to lesson folder
+        if (existingFiles.length > 0) {
+          const newFiles = await this.storageService.copyFiles(
+            this.storageService.getProductFilePath(
+              guidesAndBooksId.toHexString(),
+            ),
+            existingFiles,
+          );
+
+          //add additional fields to files object
+          const filesToSave = attachTargetToFiles(
+            newFiles,
+            'GuidesAndBooks',
+            guidesAndBooksId,
+          );
+          //save files data to db
+          const savedFiles = await this.filesService.createFiles(filesToSave);
+          const newFileIds = savedFiles.map((item) => item._id.toString());
+          //save to lesson
+          updateData.file = newFileIds[0];
+
+          //delete files from temp folder
+          await this.storageService.deleteFiles(process.cwd(), existingFiles);
+        }
+      }
+      await this.guidesAndBooksModel.updateOne(
+        { _id: guidesAndBooksId },
+        {
+          $set: { ...updateData },
+        },
+      );
+
+      return { message: 'success' };
     } catch (error) {
+      console.log(error);
+
       throw new BadRequestException(error._message + ', Mongo DB');
     }
   }
@@ -246,6 +419,9 @@ export class AdminGuidesAndBooksService {
           $project: {
             id: '$_id',
             name: '$name.uk',
+            targetModule: {
+              $literal: 'GuidesAndBooks',
+            },
             _id: 0,
           },
         },

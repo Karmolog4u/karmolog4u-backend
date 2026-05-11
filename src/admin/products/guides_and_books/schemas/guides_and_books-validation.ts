@@ -12,6 +12,7 @@ export const newGuidesAndBooksSchema = Joi.object()
         'any.only':
           'category має бути одним з таких значень: GUIDES, OTHER_GUIDES, BOOKS',
       }),
+
     name: Joi.object()
       .keys({
         ru: Joi.string().required().messages({
@@ -28,9 +29,11 @@ export const newGuidesAndBooksSchema = Joi.object()
         'any.required': "name є обов'язковим полем",
       })
       .unknown(false),
+
     isWaiting: Joi.bool().optional().messages({
-      'bool.base': 'isWaiting має бути рядком',
+      'bool.base': 'isWaiting має бути булевим значенням',
     }),
+
     description: Joi.object()
       .keys({
         ru: Joi.string().optional().messages({
@@ -42,15 +45,19 @@ export const newGuidesAndBooksSchema = Joi.object()
       })
       .optional()
       .unknown(false),
+
     video: Joi.string().optional().messages({
       'string.base': 'video має бути рядком',
     }),
+
     cover: Joi.string().optional().messages({
       'string.base': 'cover має бути рядком',
     }),
+
     price: Joi.number().optional().messages({
       'number.base': 'price має бути числом',
     }),
+
     status: Joi.string()
       .valid('DRAFT', 'HIDDEN', 'PUBLISHED')
       .required()
@@ -61,6 +68,7 @@ export const newGuidesAndBooksSchema = Joi.object()
         'any.only':
           'status має бути одним з таких значень: DRAFT, HIDDEN, PUBLISHED',
       }),
+
     discount: Joi.object()
       .keys({
         discount: Joi.number().optional().messages({
@@ -71,6 +79,21 @@ export const newGuidesAndBooksSchema = Joi.object()
         }),
         expiredAt: Joi.date().optional().messages({
           'date.base': 'expiredAt має бути датою',
+        }),
+      })
+      .optional()
+      .unknown(false),
+
+    file: Joi.object()
+      .keys({
+        savedName: Joi.string().optional().messages({
+          'string.base': 'savedName має бути рядком',
+        }),
+        originalName: Joi.string().optional().messages({
+          'string.base': 'originalName має бути рядком',
+        }),
+        path: Joi.string().optional().messages({
+          'string.base': 'path має бути рядком',
         }),
       })
       .optional()
@@ -147,6 +170,20 @@ export const updateGuidesAndBooksSchema = Joi.object()
         }),
         expiredAt: Joi.date().optional().messages({
           'date.base': 'expiredAt має бути датою',
+        }),
+      })
+      .optional()
+      .unknown(false),
+    file: Joi.object()
+      .keys({
+        savedName: Joi.string().optional().messages({
+          'string.base': 'savedName має бути рядком',
+        }),
+        originalName: Joi.string().optional().messages({
+          'string.base': 'originalName має бути рядком',
+        }),
+        path: Joi.string().optional().messages({
+          'string.base': 'path має бути рядком',
         }),
       })
       .optional()

@@ -5,6 +5,9 @@ import { UserModule } from './user/user.module';
 import { CourseModule } from './education/course/course.module';
 import { ModuleModule } from './education/module/module.module';
 import { LessonModule } from './education/lessons/lesson.module';
+import { CoursePurchaseModule } from './coursePurchase/coursePurchase.module';
+import { ProductPurchaseModule } from './productPurchase/productPurchase.module';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
@@ -14,6 +17,9 @@ import { LessonModule } from './education/lessons/lesson.module';
     CourseModule,
     ModuleModule,
     LessonModule,
+    CoursePurchaseModule,
+    ProductPurchaseModule,
+    EventsModule,
   ],
   controllers: [],
   providers: [],

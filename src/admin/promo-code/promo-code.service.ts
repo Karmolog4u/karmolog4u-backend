@@ -421,4 +421,18 @@ export class PromoCodeService {
       throw new NotFoundException('Видалених продуктів не знайдено');
     }
   }
+
+  async validatePromoCode(code: string, productId: Types.ObjectId) {
+    try {
+      return await this.promoCodeModel.findOne({
+        name: code,
+        refId: productId,
+        blocked: false,
+        start: { $lte: new Date() },
+        end: { $gte: new Date() },
+      });
+    } catch (error) {
+      throw new BadRequestException('Промокод не дійсний');
+    }
+  }
 }

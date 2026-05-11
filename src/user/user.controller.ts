@@ -1,48 +1,47 @@
-import { UserResponseDto } from './dto/user-response.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UserInfoResponseDto } from './dto/user-info-response.dto';
 import {
   Controller,
   HttpException,
-  // UseGuards,
   Post,
   Body,
-  UsePipes,
   Get,
+  HttpCode,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-// import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/common/decorators/user.decorator';
 import { UserEntity } from 'src/user/dto/user-entity.dto';
-import { JoiValidationPipe } from 'src/common/pipes/JoiValidationPipe';
-import { UpdateUserSchema } from './schemas/validation.schemas';
+
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiNotFoundResponse,
   ApiOperation,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { Roles } from 'src/role/roles.decorator';
 import { Role } from 'src/role/role.enum';
+import { UpdateByUserDto } from './dto/update-by-user.dto';
 
 @ApiBearerAuth()
+// @UseGuards(AuthGuard)
 @ApiTags('user')
-@Roles(Role.Admin)
+@Roles(Role.User, Role.Admin)
 @Controller('user')
 export class UserController {
   constructor(private userService: UserService) {}
 
-  @Get()
+  @Get('info')
   @ApiOperation({ summary: 'Get user' })
   @ApiResponse({
     status: 200,
     description: 'User data',
-    type: UserResponseDto,
+    type: UserInfoResponseDto,
   })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  // @UsePipes(new JoiValidationPipe(UpdateUserSchema))
-  async findUser(@User() user: UserEntity): Promise<UserResponseDto> {
+  @ApiNotFoundResponse({ description: 'Користувача не знайдено' })
+  async get(@User() user: UserEntity): Promise<UserInfoResponseDto> {
     try {
-      return await this.userService.findUserById({ _id: user._id });
+      return await this.userService.getUserInfo({ id: user._id });
     } catch (error) {
       throw new HttpException(
         {
@@ -60,18 +59,18 @@ export class UserController {
   @Post('update')
   @ApiOperation({ summary: 'Update user' })
   @ApiResponse({
-    status: 201,
+    status: 200,
     description: 'User updated',
-    type: UserResponseDto,
+    type: UserInfoResponseDto,
   })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @UsePipes(new JoiValidationPipe(UpdateUserSchema))
-  async updateUser(
-    @Body() userData: UpdateUserDto,
+  @ApiBadRequestResponse({ description: 'Помилка оновлення користувача' })
+  @HttpCode(200)
+  async updateByUser(
+    @Body() userData: UpdateByUserDto,
     @User() user: UserEntity,
-  ): Promise<UserResponseDto> {
+  ): Promise<UserInfoResponseDto> {
     try {
-      return await this.userService.updateUser(user._id, userData);
+      return await this.userService.updateByUser(user._id, userData);
     } catch (error) {
       throw new HttpException(
         {

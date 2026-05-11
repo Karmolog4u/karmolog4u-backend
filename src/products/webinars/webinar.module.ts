@@ -22,5 +22,6 @@ import { DiscountModule } from 'src/admin/products/discount/discount.module';
   ],
   controllers: [WebinarController],
   providers: [WebinarService],
+  exports: [MongooseModule],
 })
 export class WebinarModule {}

@@ -241,6 +241,9 @@ export class AdminMeditationService {
           $project: {
             id: '$_id',
             name: '$name.uk',
+            targetModule: {
+              $literal: 'Meditation',
+            },
             _id: 0,
           },
         },

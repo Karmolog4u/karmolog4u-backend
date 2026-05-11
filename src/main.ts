@@ -4,6 +4,7 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import 'reflect-metadata';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { abortOnError: false });
@@ -36,6 +37,7 @@ async function bootstrap() {
       transform: true, // Enables transformations
     }),
   );
+  app.useGlobalFilters(new GlobalExceptionFilter()); // глобальний фільтр для обробки помилок
   app.enableCors();
   app.useLogger(new Logger());
   await app.listen(port || 4499);

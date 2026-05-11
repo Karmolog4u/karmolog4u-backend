@@ -8,6 +8,8 @@ import {
 } from './schemas/guides_and_books.schema';
 // import { Discount, DiscountSchema } from '../discount/schemas/discount.schema';
 import { DiscountModule } from '../discount/discount.module';
+import { StorageModule } from 'src/storage/storage.module';
+import { FilesModule } from 'src/files/files.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { DiscountModule } from '../discount/discount.module';
       // { name: Discount.name, schema: DiscountSchema },
     ]),
     DiscountModule,
+    StorageModule,
+    FilesModule,
   ],
   controllers: [AdminGuidesAndBooksController],
   providers: [AdminGuidesAndBooksService],

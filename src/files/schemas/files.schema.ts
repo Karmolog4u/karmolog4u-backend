@@ -27,7 +27,7 @@ export class Files {
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId })
   targetId: mongoose.Types.ObjectId;
 
-  @Prop({ required: true, enum: ['Course', 'Lesson'] })
+  @Prop({ required: true, enum: ['Course', 'Lesson', 'GuidesAndBooks'] })
   targetModel: string;
 }
 

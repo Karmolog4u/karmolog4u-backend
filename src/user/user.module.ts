@@ -6,6 +6,7 @@ import * as bcrypt from 'bcryptjs';
 import { Module } from '@nestjs/common';
 import { User, UserSchema } from './schemas/user.schema';
 import { ConfigModule } from '@nestjs/config';
+import { StorageModule } from 'src/storage/storage.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ConfigModule } from '@nestjs/config';
     ]),
     ConfigModule,
     TokenModule,
+    StorageModule,
   ],
   controllers: [UserController],
   providers: [UserService],

@@ -57,7 +57,7 @@ export class GetUsersQueryDto {
   searchQuery?: string;
 
   @ApiPropertyOptional({
-    description: 'ID курсу для фільтрації',
+    description: 'ID курсу для фільтрації користувачів, які придбали цей курс',
     example: '64ff00a7d81e29cbf3ac11f1',
   })
   @IsOptional()

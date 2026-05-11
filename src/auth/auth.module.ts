@@ -1,5 +1,5 @@
 import { AuthService } from './auth.service';
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -13,7 +13,8 @@ import { MailModule } from 'src/mail/mail.module';
 
 @Module({
   imports: [
-    UserModule,
+    forwardRef(() => UserModule),
+    // UserModule,
     TokenModule,
     VerificationModule,
     MailModule,

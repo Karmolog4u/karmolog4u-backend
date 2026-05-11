@@ -96,8 +96,8 @@ export class GetCourseByIdDto {
   @ApiProperty({ example: ['file1.pdf', 'file2.docx'] })
   optionalFiles: string[];
 
-  @ApiProperty({ example: 'invoice-123' })
-  practiceInvoice: string;
+  @ApiProperty({ example: 123 })
+  practiceInvoice: number;
 
   @ApiProperty({ example: 1 })
   stream: number;

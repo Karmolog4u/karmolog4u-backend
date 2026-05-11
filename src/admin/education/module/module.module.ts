@@ -12,5 +12,6 @@ import { CourseModule } from '../course/course.module';
   ],
   controllers: [ModuleController],
   providers: [ModuleService],
+  exports: [MongooseModule],
 })
 export class ModuleModule {}

@@ -53,6 +53,9 @@ export class User {
 
   @Prop({ type: Date, default: null })
   expiredAt: Date;
+
+  @Prop({ type: String, default: null })
+  cover: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

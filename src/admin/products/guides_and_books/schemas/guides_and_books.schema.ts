@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument } from 'mongoose';
 
 export type GuidesAndBooksDocument = HydratedDocument<GuidesAndBooks>;
 
@@ -55,6 +55,12 @@ export class GuidesAndBooks {
 
   @Prop({ type: String, default: '' })
   cover: string;
+
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Files',
+  })
+  file: string;
 
   @Prop({ type: Number, default: 0 })
   price: number;

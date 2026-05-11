@@ -7,8 +7,12 @@ import {
   IsNumber,
   IsDate,
   IsUrl,
+  ValidateIf,
+  IsNotEmpty,
+  IsBoolean,
+  ValidateNested,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 class OptionalFiles {
   @ApiProperty({
@@ -134,6 +138,31 @@ class OptionalLink {
   link: string;
 }
 
+class AllowedPaymentTypes {
+  @ApiProperty({ example: false })
+  telegram: boolean;
+
+  @ApiProperty({ example: true })
+  wayForPay: boolean;
+
+  @ApiProperty({ example: false })
+  requisites: boolean;
+}
+
+class PaymentTypes {
+  @ApiProperty({ type: () => AllowedPaymentTypes })
+  @ValidateNested()
+  allowed: AllowedPaymentTypes;
+  @ApiPropertyOptional({
+    description: 'The field is required if allowed.requisites is true',
+    example: 'IBAN: UA1234567890...',
+  })
+  @ValidateIf((o) => o.allowed?.requisites)
+  @IsString()
+  @IsNotEmpty({ message: 'Заповніть поле реквізитів' })
+  requisitesText: string;
+}
+
 export class CreateCourseDto {
   @ApiProperty({ example: 'Advanced JavaScript', description: 'Course name' })
   @IsString()
@@ -205,12 +234,13 @@ export class CreateCourseDto {
   optionalFiles?: OptionalFiles[];
 
   @ApiPropertyOptional({
-    example: 'https://example.com/invoice',
-    description: 'Invoice link',
+    example: 12345,
+    description: 'Invoice number',
   })
   @IsOptional()
-  @IsString()
-  practiceInvoice?: string;
+  @Type(() => Number)
+  @IsNumber()
+  practiceInvoice?: number;
 
   @ApiProperty({ example: 1, description: 'Stream number' })
   @IsNumber()
@@ -254,4 +284,9 @@ export class CreateCourseDto {
   })
   @IsEnum(['DRAFT', 'PUBLISHED', 'ARCHIVE'])
   status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVE';
+
+  @ApiProperty({
+    description: 'Payment types',
+  })
+  paymentTypes: PaymentTypes;
 }

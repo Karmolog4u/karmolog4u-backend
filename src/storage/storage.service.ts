@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -6,10 +6,14 @@ import {
   findFileInMaterials,
   findFileInCovers,
 } from 'src/common/helper/findRecursive';
+import { FilesService } from 'src/files/files.service';
 
 @Injectable()
 export class StorageService {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly filesService: FilesService,
+  ) {}
 
   async getCover(fileName: string) {
     const rootFolder = path.join(process.cwd(), '..', 'storage'); // Коренева папка для пошуку
@@ -18,9 +22,10 @@ export class StorageService {
   }
 
   async getFile(fileName: string) {
+    const file = await this.filesService.getFilesBySavedName(fileName);
     const rootFolder = path.join(process.cwd(), '..', 'storage'); // Коренева папка для пошуку
-    const filePath = await findFileInMaterials(rootFolder, fileName);
-    return filePath;
+    // const filePath = await findFileInMaterials(rootFolder, fileName);
+    return { file: file[0], rootFolder };
   }
 
   getTemporaryCover(fileName: string) {
@@ -97,6 +102,24 @@ export class StorageService {
     }
   }
 
+  async createUserStorage(userId: string): Promise<string> {
+    try {
+      const userFolder = path.join(
+        process.cwd(),
+        '..',
+        'storage',
+        'users',
+        userId,
+      ); // Шлях до папки
+      await fs.mkdir(userFolder, { recursive: true });
+
+      console.log(`Сховище користувача створено: ${userFolder}`);
+      return userFolder;
+    } catch (error) {
+      throw new BadRequestException('Помилка створення сховища :(');
+    }
+  }
+
   async createLessonStorage(lessonId: string): Promise<string> {
     try {
       const lessonFolder = path.join(
@@ -115,6 +138,24 @@ export class StorageService {
     }
   }
 
+  async createProductStorage(productId: string): Promise<string> {
+    try {
+      const productFolder = path.join(
+        process.cwd(),
+        '..',
+        'storage',
+        'products',
+        productId,
+      ); // Шлях до папки
+      await fs.mkdir(productFolder, { recursive: true });
+
+      console.log(`Сховище продукту створено: ${productFolder}`);
+      return productFolder;
+    } catch (error) {
+      throw new BadRequestException('Помилка створення сховища :(');
+    }
+  }
+
   async createStorageFolder() {
     const storageFolder = path.join(process.cwd(), '..', 'storage'); // Шлях до папки
     const educationFolder = path.join(
@@ -124,9 +165,18 @@ export class StorageService {
       'education',
     ); // Шлях до папки
     const coversFolder = path.join(process.cwd(), '..', 'storage', 'covers'); // Шлях до папки
+    const usersFolder = path.join(process.cwd(), '..', 'storage', 'users'); // Шлях до папки
+    const productsFolder = path.join(
+      process.cwd(),
+      '..',
+      'storage',
+      'products',
+    ); // Шлях до папки
     await this.createFolder(storageFolder);
     await this.createFolder(educationFolder);
     await this.createFolder(coversFolder);
+    await this.createFolder(usersFolder);
+    await this.createFolder(productsFolder);
   }
 
   // async moveFiles(
@@ -258,6 +308,11 @@ export class StorageService {
   }
   getLessonFilePath(Id: any) {
     const filePath = path.join(process.cwd(), '..', 'storage', 'education', Id); // Коренева папка для пошуку
+    return filePath;
+  }
+
+  getProductFilePath(Id: any) {
+    const filePath = path.join(process.cwd(), '..', 'storage', 'products', Id); // Коренева папка для пошуку
     return filePath;
   }
 

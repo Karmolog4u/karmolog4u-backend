@@ -31,10 +31,18 @@ export class WebinarService {
               {
                 $lookup: {
                   from: 'discounts', // Колекція знижок
+                  let: { now: new Date() },
                   localField: '_id', // Поле, яке зв'язує запис
                   foreignField: 'refId', // Поле у колекції discounts
                   as: 'discount', // Результат у полі discount
                   pipeline: [
+                    {
+                      $match: {
+                        $expr: {
+                          $and: [{ $lte: ['$start', '$$now'] }],
+                        },
+                      },
+                    },
                     {
                       $project: {
                         // Вибір конкретних полів
@@ -60,11 +68,13 @@ export class WebinarService {
               },
               {
                 $project: {
-                  _id: 1,
+                  _id: 0,
+                  id: '$_id',
                   category: 1,
                   status: 1,
                   name: 1,
                   cover: 1,
+                  price: 1,
                   discount: {
                     $cond: {
                       if: { $ne: ['$discount', null] }, // Якщо discount не дорівнює null
@@ -82,6 +92,8 @@ export class WebinarService {
                   category: 1,
                   name: 1,
                   video: 1,
+                  _id: 0,
+                  id: '$_id',
                 },
               },
             ],
@@ -120,10 +132,18 @@ export class WebinarService {
         {
           $lookup: {
             from: 'discounts', // Колекція знижок
+            let: { now: new Date() },
             localField: '_id', // Поле, яке зв'язує запис
             foreignField: 'refId', // Поле у колекції discounts
             as: 'discount', // Результат у полі discount
             pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [{ $lte: ['$start', '$$now'] }],
+                  },
+                },
+              },
               {
                 $project: {
                   // Вибір конкретних полів
@@ -149,11 +169,16 @@ export class WebinarService {
         },
         {
           $project: {
-            _id: 1,
+            _id: 0,
+            id: '$_id',
             category: 1,
             status: 1,
             name: 1,
             cover: 1,
+            price: 1,
+            description: 1,
+            detailsDescription: 1,
+            detailsTitle: 1,
             discount: {
               $cond: {
                 if: { $ne: ['$discount', null] }, // Якщо discount не дорівнює null

@@ -9,6 +9,6 @@ import { Files, FilesSchema } from './schemas/files.schema';
   ],
   controllers: [],
   providers: [FilesService],
-  exports: [FilesService],
+  exports: [FilesService, MongooseModule],
 })
 export class FilesModule {}

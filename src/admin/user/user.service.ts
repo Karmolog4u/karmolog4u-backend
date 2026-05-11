@@ -60,10 +60,6 @@ export class UserService {
         ];
       }
 
-      if (course_id) {
-        matchStage.courses = new Types.ObjectId(course_id);
-      }
-
       const sortField = [
         'name',
         'email',
@@ -81,6 +77,23 @@ export class UserService {
           {
             $match: matchStage,
           },
+          ...(course_id
+            ? [
+                {
+                  $lookup: {
+                    from: 'coursepurchases',
+                    localField: '_id',
+                    foreignField: 'userId',
+                    as: 'coursePurchases',
+                  },
+                },
+                {
+                  $match: {
+                    'coursePurchases.courseId': new Types.ObjectId(course_id),
+                  },
+                },
+              ]
+            : []),
           {
             $sort: {
               [sortField]: sortOrder === -1 ? -1 : 1,
@@ -313,8 +326,6 @@ export class UserService {
         message: 'Користувачі успішно імпортовані',
       };
     } catch (error) {
-      console.log(error);
-      
       throw new HttpException(
         {
           status: error.status,

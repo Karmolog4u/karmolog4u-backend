@@ -1,0 +1,44 @@
+services:
+  api:
+    build: .
+    container_name: nest_api
+
+    ports:
+      - '3010:4499'
+
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ../storage:/app/storage
+
+    env_file:
+      - src/common/envs/development.env
+
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+    depends_on:
+      - redis
+
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis_cache
+
+    ports:
+      - '6379:6379'
+
+    command: ["redis-server", "--appendonly", "yes"]
+
+    volumes:
+      - redis_data:/data
+
+    restart: unless-stopped
+
+volumes:
+  redis_data:

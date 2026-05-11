@@ -12,13 +12,13 @@ class Access {
   })
   type: string;
 
-  @Prop({ type: Date, required: false })
+  @Prop({ type: Date, required: false, default: null })
   dateStart: Date;
 
-  @Prop({ type: Date, required: false })
+  @Prop({ type: Date, required: false, default: null })
   dateEnd: Date;
 
-  @Prop({ type: Number, required: false })
+  @Prop({ type: Number, required: false, default: 0 })
   months: number;
 }
 
@@ -40,6 +40,32 @@ class OptionalLink {
   link: string;
 }
 
+//Payment types
+@Schema({ _id: false })
+class AllowedPaymentTypes {
+  @Prop({ type: Boolean, default: false })
+  telegram: boolean;
+
+  @Prop({ type: Boolean, default: false })
+  wayForPay: boolean;
+
+  @Prop({ type: Boolean, default: false })
+  requisites: boolean;
+}
+
+@Schema({ _id: false })
+class PaymentTypes {
+  @Prop({ type: AllowedPaymentTypes, required: true })
+  allowed: AllowedPaymentTypes;
+  @Prop({
+    type: String,
+    required: function () {
+      return this.allowed?.requisites;
+    },
+  })
+  requisitesText: string;
+}
+
 @Schema({
   timestamps: true,
   toJSON: {
@@ -51,6 +77,8 @@ class OptionalLink {
     },
   },
 })
+
+//Final course schema
 export class Course {
   @Prop({ required: true, type: String })
   name: string;
@@ -87,8 +115,8 @@ export class Course {
   })
   optionalLink: OptionalLink[];
 
-  @Prop({ required: false, type: String, default: '' })
-  practiceInvoice: string;
+  @Prop({ required: false, type: Number, default: 0 })
+  practiceInvoice: number;
 
   @Prop({ required: false, type: String, default: 0 })
   stream: number;
@@ -112,6 +140,9 @@ export class Course {
     enum: ['DRAFT', 'PUBLISHED', 'ARCHIVE'],
   })
   status: string;
+
+  @Prop({ type: PaymentTypes })
+  paymentTypes: PaymentTypes;
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);

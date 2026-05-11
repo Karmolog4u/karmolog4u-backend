@@ -2,6 +2,7 @@
 /dist
 /envs
 
+
 # Logs
 logs
 *.log
@@ -137,3 +138,7 @@ dist
 .env
 development.env
 production.env
+
+#folders for temporary files
+/temporaryCovers
+/temporaryFiles

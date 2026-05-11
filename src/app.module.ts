@@ -1,3 +1,5 @@
+import { DriveModule } from './drive/drive.module';
+import { CoursePurchaseModule } from './coursePurchase/coursePurchase.module';
 import { StorageModule } from './storage/storage.module';
 import { DiscountModule } from './admin/products/discount/discount.module';
 import { ProductModule } from './products/product.module';
@@ -15,11 +17,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { getEnvPath } from './common/helper/env.helper';
 import { validate } from './common/helper/env.validation';
 import { LoggerMiddleware } from './common/middleware/logger.middlvare';
-// import { ServeStaticModule } from '@nestjs/serve-static';
 import { AdminModule } from './admin/admin.module';
 import { MailModule } from './mail/mail.module';
 import { StorageService } from './storage/storage.service';
 import { FilesModule } from './files/files.module';
+import { CourseModule } from './user/education/course.module';
+import { ContractParticipantModule } from './user/education/сontractParticipant/contract.module';
+import { PaymentsModule } from './payments/payments.module';
+import { EventsModule } from './events/events.module';
 
 const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
 
@@ -33,15 +38,46 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
         uri: config.get<string>('MONGO_URL'),
       }),
     }),
-    StorageModule,
-    DiscountModule,
+    // GcsModule.forRootAsync({
+    //   inject: [ConfigService],
+    //   useFactory: (config: ConfigService) => ({
+    //     projectId: config.get<string>('GCP_PROJECT_ID'),
+    //     bucket: config.get<string>('GCP_BUCKET'),
+    //     credentials: {
+    //       client_email: config.get<string>('GCP_CLIENT_EMAIL'),
+    //       private_key: config
+    //         .get<string>('GCP_PRIVATE_KEY')
+    //         ?.replace(/\\n/g, '\n'),
+    //     },
+    //   }),
+    // }),
+    DriveModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        clientEmail: config.get<string>('GCP_CLIENT_EMAIL'),
+        privateKey: config
+          .get<string>('GCP_PRIVATE_KEY')
+          ?.replace(/\\n/g, '\n'),
+        folderId: config.get<string>('GOOGLE_API_FOLDER'),
+        scopes: ['https://www.googleapis.com/auth/drive.readonly'],
+      }),
+    }),
+    AuthModule,
     TokenModule,
     UserModule,
-    AuthModule,
+    MailModule,
+    StorageModule,
+    DiscountModule,
     AdminModule,
     ProductModule,
-    MailModule,
     FilesModule,
+    CoursePurchaseModule,
+    CourseModule,
+    ContractParticipantModule,
+    PaymentsModule,
+    EventsModule,
+
+    // ProductPurchaseModule,
     // ServeStaticModule.forRoot({
     //   rootPath: 'covers',
     //   serveRoot: '/covers', // Optional: URL prefix for accessing the files

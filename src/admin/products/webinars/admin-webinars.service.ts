@@ -236,6 +236,9 @@ export class AdminWebinarsService {
           $project: {
             id: '$_id',
             name: '$name.uk',
+            targetModule: {
+              $literal: 'Webinar',
+            },
             _id: 0,
           },
         },

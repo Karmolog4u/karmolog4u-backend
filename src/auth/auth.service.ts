@@ -6,6 +6,7 @@ import { TokenService } from './../token/token.service';
 import {
   BadRequestException,
   ForbiddenException,
+  forwardRef,
   HttpException,
   Inject,
   Injectable,
@@ -25,11 +26,14 @@ import { generateUniquePassword } from 'src/common/helper/generatePassword';
 import { VerificationService } from 'src/verification/verification.service';
 import { MailService } from 'src/mail/mail.service';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
+import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject(UserService) private userService: UserService,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: UserService,
+    // @Inject(UserService) private userService: UserService,
     @Inject(TokenService) private tokenService: TokenService,
     @Inject(JwtService) private jwtService: JwtService,
     @Inject(VerificationService) private verifyService: VerificationService,
@@ -367,6 +371,26 @@ export class AuthService {
           cause: error,
         },
       );
+    }
+  }
+
+  async verifyUserCredentials(token) {
+    try {
+      const secret = this.configService.get<string>('JWT_SECRET');
+      await this.jwtService.verifyAsync(token, {
+        secret,
+      });
+
+      const tokenDb = await this.tokenService.findToken({
+        accessToken: token,
+      });
+
+      const user = await this.userService.findUserById({
+        _id: new ObjectId(tokenDb.owner.toString()),
+      });
+      return user;
+    } catch (error) {
+      throw new Error();
     }
   }
 }

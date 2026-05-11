@@ -4,15 +4,6 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "assets": ["common/envs/*"],
-    "plugins": [
-      {
-        "name": "@nestjs/swagger",
-        "options": {
-          "classValidatorShim": false,
-          "introspectComments": true
-        }
-      }
-    ]
+    "assets": ["common/envs/*"]
   }
 }

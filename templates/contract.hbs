@@ -1,0 +1,72 @@
+<html lang='uk'>
+  <head>
+    <meta charset='UTF-8' />
+    <title>Договір підписаний</title>
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+      Helvetica, Arial, sans-serif; background-color: #f8f9fa; color: #333;
+      line-height: 1.6; margin: 0; padding: 0; } .email-container { max-width:
+      600px; margin: 20px auto; background: #ffffff; padding: 30px; border: 1px
+      solid #ddd; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      } .header { text-align: center; margin-bottom: 30px; border-bottom: 2px
+      solid #007bff; padding-bottom: 20px; } .header h2 { color: #007bff;
+      margin: 0; } .content { margin: 20px 0; } .content p { margin: 10px 0; }
+      .user-info { background-color: #f8f9fa; padding: 15px; border-left: 4px
+      solid #007bff; margin: 20px 0; border-radius: 4px; } .user-info p {
+      margin: 8px 0; font-size: 14px; } .user-info strong { color: #333; }
+      .course-info { background-color: #e7f3ff; padding: 15px; border-radius:
+      4px; margin: 20px 0; } .course-info p { margin: 8px 0; } .signature-block
+      { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;
+      font-size: 14px; color: #666; } .footer { text-align: center; margin-top:
+      30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px;
+      color: #999; } .highlight { color: #007bff; font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <div class='email-container'>
+      <div class='header'>
+        <h2>✓ Договір Підписаний</h2>
+      </div>
+
+      <div class='content'>
+
+        {{#if isAdmin}}
+          <p>Користувач успішно підписав договір про надання освітньо-навчальних
+            послуг.</p>
+          <div class='user-info'>
+            <p><strong>Інформація про користувача:</strong></p>
+            <p><strong>Ім'я:</strong> {{fullname}}</p>
+            <p><strong>Email:</strong> {{email}}</p>
+            <p><strong>Телефон:</strong> {{phone}}</p>
+            <p><strong>ID код:</strong> {{idCode}}</p>
+            <p><strong>Паспортні дані:</strong> {{passport}}</p>
+          </div>
+
+        {{else}}
+          <p>Привіт, <strong>{{fullname}}</strong>!</p>
+          <p>Дякуємо за вашу реєстрацію! Ми рді повідомити, що ваш договір
+            успішно підписаний та зареєстрований у нашій системі.</p>
+        {{/if}}
+
+        <div class='course-info'>
+          <p><strong>Інформація про курс:</strong></p>
+          <p><strong>Курс:</strong> {{courseName}}</p>
+          <p><strong>Дата підписання:</strong> {{signDate}}</p>
+        </div>
+
+        <p>Договір додається до цього листа у форматі PDF. Будь ласка, збережіть
+          цей документ для ваших записів.</p>
+
+        <div class='signature-block'>
+          <p>З повагою,<br />
+            <span class='highlight'>Команда Karmolog4u</span></p>
+        </div>
+      </div>
+
+      <div class='footer'>
+        <p>Це автоматичне повідомлення. Будь ласка, не відповідайте на цей лист.</p>
+        <p>&copy; 2026 Karmolog4u. Всі права захищені.</p>
+      </div>
+    </div>
+  </body>
+</html>

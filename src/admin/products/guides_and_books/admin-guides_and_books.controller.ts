@@ -84,7 +84,7 @@ export class AdminGuidesAndBooksController {
     try {
       const parsedData = parseFields(data);
 
-      //validate data
+      // validate data
       const { error } = newGuidesAndBooksSchema.validate(parsedData);
       if (error) {
         throw new BadRequestException(error.details[0].message);
@@ -234,7 +234,6 @@ export class AdminGuidesAndBooksController {
         const { _id, ...modifiedDiscount } = editedDiscount.toObject();
         return {
           ...editedGuidesAndBooks,
-          discount: modifiedDiscount,
         };
       } else {
         await this.discountService.deleteDiscount({

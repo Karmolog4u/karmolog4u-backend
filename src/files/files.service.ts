@@ -47,4 +47,14 @@ export class FilesService {
       throw new BadRequestException('Не вдалося додати файли :(');
     }
   }
+
+  async getFilesBySavedName(savedName: string) {
+    try {
+      return await this.fileModel
+        .find({ savedName })
+        .select('originalName path')
+        .lean()
+        .exec();
+    } catch (error) {}
+  }
 }

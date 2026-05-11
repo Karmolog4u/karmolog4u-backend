@@ -45,7 +45,7 @@ export class StorageController {
   ) {}
 
   @ApiBearerAuth()
-  @Roles(Role.Admin)
+  @Roles(Role.User, Role.Admin)
   @Post('uploadCover')
   @ApiOperation({
     summary: 'Admin Upload Cover',
@@ -98,7 +98,7 @@ export class StorageController {
   }
 
   @ApiBearerAuth()
-  @Roles(Role.Admin)
+  @Roles(Role.User, Role.Admin)
   @Post('uploadFiles')
   @ApiOperation({
     summary: 'Admin Upload Files',
@@ -161,7 +161,7 @@ export class StorageController {
   }
 
   @ApiBearerAuth()
-  @Roles(Role.Admin)
+  @Roles(Role.User, Role.Admin)
   @Get('temporaryFiles/:file')
   async serveTemporaryFile(
     @Res() res: Response,
@@ -185,13 +185,22 @@ export class StorageController {
   }
 
   @ApiBearerAuth()
-  @Roles(Role.Admin)
+  @Roles(Role.User, Role.Admin)
   @Get('file/:file')
   async serveFile(
     @Res() res: Response,
     @Param() params: DownloadFileParamsDto,
   ) {
-    const filePath = await this.storageService.getFile(params.file);
-    return res.sendFile(filePath);
+    // const filePath = await this.storageService.getFile(params.file);
+    // return res.sendFile(filePath);
+    const file = await this.storageService.getFile(params.file);
+    if (!file) {
+      return res.status(404).json({ message: 'Файл не знайдено' });
+    }
+
+    return res.download(
+      file.rootFolder + '/' + file.file.path,
+      file.file.originalName,
+    );
   }
 }
