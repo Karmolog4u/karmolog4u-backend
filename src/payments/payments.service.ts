@@ -31,10 +31,9 @@ interface SignatureDataInterface {
   orderDate: number;
   amount: number;
   currency: string;
-  productName: string;
-  productId: ObjectId;
-  productPrice: number;
-  productType: string;
+  productName: string[];
+  productPrice: number[];
+  productCount: number[];
 }
 
 @Injectable()
@@ -44,6 +43,7 @@ export class PaymentsService {
   private returnUrl: string;
   private serviceUrl: string;
   private currency: string;
+  private merchantDomainName: string;
   constructor(
     @InjectModel(Purchase.name)
     private purchaseModel: Model<PurchaseDocument>,
@@ -63,6 +63,9 @@ export class PaymentsService {
     this.returnUrl = this.configService.getOrThrow('WFP_RETURN_URL');
     this.serviceUrl = this.configService.getOrThrow('WFP_CALLBACK_URL');
     this.currency = this.configService.get('CURRENCY') ?? 'EUR';
+    this.merchantDomainName = this.configService.getOrThrow(
+      'WFP_MERCHANT_DOMAIN_NAME',
+    );
   }
 
   // if user email not equal to dto.email do by email, if user email equal to dto.email do by userId
@@ -178,12 +181,10 @@ export class PaymentsService {
       orderDate,
       amount,
       currency: this.currency,
-      productName: purchase.productName,
-      productId: purchase.productId,
-      productPrice: purchase.productPrice,
-      productType,
+      productName: [purchase.productName],
+      productPrice: [purchase.productPrice],
+      productCount: [1],
     });
-
 
     return {
       orderReference,
@@ -193,14 +194,14 @@ export class PaymentsService {
         merchantAccount: this.merchantAccount,
         merchantAuthType: 'SimpleSignature',
         merchantSignature: signature,
+        merchantDomainName: this.merchantDomainName,
         orderReference,
         orderDate,
         amount,
         currency: purchase.currency,
-        productName: purchase.productName,
-        productPrice: purchase.productPrice,
-        productId: purchase.productId,
-        productType,
+        productName: [purchase.productName],
+        productPrice: [purchase.productPrice],
+        productCount: [1],
         paymentType: PaymentType.FULL,
         returnUrl: this.returnUrl,
         serviceUrl: this.serviceUrl,
@@ -268,195 +269,199 @@ export class PaymentsService {
   //   };
   // }
 
-  async createCourseSSKPayment(dto: any, user: UserEntity) {
-    // search course by id
-    //search user course purchase by userId and courseId, if payment plan full throw error
-    //if ssk user pay 50% only, after change payment plan - full
-    //if CONSULTING or ADVANCED user pay 1 mounth or pay all teoretikal then change payment plan - full
+  // async createCourseSSKPayment(dto: any, user: UserEntity) {
+  //   // search course by id
+  //   //search user course purchase by userId and courseId, if payment plan full throw error
+  //   //if ssk user pay 50% only, after change payment plan - full
+  //   //if CONSULTING or ADVANCED user pay 1 mounth or pay all teoretikal then change payment plan - full
 
-    const id = new Types.ObjectId(dto.itemId);
-    // find course
-    const course = await this.courseService.getCourseData(id);
-    if (!course) {
-      throw new BadRequestException('Course not found');
-    }
+  //   const id = new Types.ObjectId(dto.itemId);
+  //   // find course
+  //   const course = await this.courseService.getCourseData(id);
+  //   if (!course) {
+  //     throw new BadRequestException('Course not found');
+  //   }
 
-    //find course purchase
-    const coursePurchase =
-      await this.coursePurchaseService.getCoursePurchaseData(id, user._id);
-    if (coursePurchase?.paymentPlan === 'FULL') {
-      throw new BadRequestException(
-        'You have already purchased this course with full access. Please check your purchases.',
-      );
-    }
-    // check if user already has an active purchase for this course
-    await this.checkCoursePurchase({ email: user.email, itemId: id });
+  //   //find course purchase
+  //   const coursePurchase =
+  //     await this.coursePurchaseService.getCoursePurchaseData(id, user._id);
+  //   if (coursePurchase?.paymentPlan === 'FULL') {
+  //     throw new BadRequestException(
+  //       'You have already purchased this course with full access. Please check your purchases.',
+  //     );
+  //   }
+  //   // check if user already has an active purchase for this course
+  //   await this.checkCoursePurchase({ email: user.email, itemId: id });
 
-    let amount = course.price / 2; // 50% of course price for SSK
+  //   let amount = course.price / 2; // 50% of course price for SSK
 
-    // check for active discount
-    const discount = await this.discountService.findDiscount({
-      refId: course._id,
-    });
-    if (discount) {
-      amount = amount - (amount * discount.discount) / 100;
-    }
+  //   // check for active discount
+  //   const discount = await this.discountService.findDiscount({
+  //     refId: course._id,
+  //   });
+  //   if (discount) {
+  //     amount = amount - (amount * discount.discount) / 100;
+  //   }
 
-    const orderReference = `order_${Date.now()}`;
+  //   const orderReference = `order_${Date.now()}`;
 
-    //check type of product and set targetModule
-    const productType = 'course';
+  //   //check type of product and set targetModule
+  //   const productType = 'course';
 
-    let purchase: PurchaseDocument;
+  //   let purchase: PurchaseDocument;
 
-    purchase = await this.purchaseModel.create({
-      orderReference,
-      productName: course.name,
-      productId: course._id,
-      productPrice: course.price,
-      productType,
-      paymentType: PaymentType.FULL,
-      amount,
-      currency: this.currency,
-      userId: user._id,
-      clientEmail: user.email,
-      clientPhone: user.mobPhone,
-    });
+  //   purchase = await this.purchaseModel.create({
+  //     orderReference,
+  //     productName: course.name,
+  //     productId: course._id,
+  //     productPrice: course.price,
+  //     productType,
+  //     paymentType: PaymentType.FULL,
+  //     amount,
+  //     currency: this.currency,
+  //     userId: user._id,
+  //     clientEmail: user.email,
+  //     clientPhone: user.mobPhone,
+  //   });
 
-    const orderDate = Math.floor(Date.now() / 1000);
+  //   const orderDate = Math.floor(Date.now() / 1000);
 
-    const signature = this.generateSignature({
-      orderReference,
-      orderDate,
-      amount,
-      currency: this.currency,
-      productName: purchase.productName,
-      productId: purchase.productId,
-      productPrice: purchase.productPrice,
-      productType,
-    });
+  //   const signature = this.generateSignature({
+  //     orderReference,
+  //     orderDate,
+  //     amount,
+  //     currency: this.currency,
+  //     productName: purchase.productName,
+  //     productId: purchase.productId,
+  //     productPrice: purchase.productPrice,
+  //     productType,
+  //     productCount: 1,
+  //   });
 
-    return {
-      status: PaymentStatus.Pending,
-      paymentUrl: 'https://secure.wayforpay.com/pay',
-      formData: {
-        merchantAccount: this.merchantAccount,
-        merchantAuthType: 'SimpleSignature',
-        merchantSignature: signature,
-        orderReference,
-        orderDate,
-        amount,
-        currency: purchase.currency,
-        productName: purchase.productName,
-        productPrice: purchase.productPrice,
-        productId: purchase.productId,
-        productType,
-        returnUrl: this.returnUrl,
-        serviceUrl: this.serviceUrl,
-      },
-    };
-  }
+  //   return {
+  //     status: PaymentStatus.Pending,
+  //     paymentUrl: 'https://secure.wayforpay.com/pay',
+  //     formData: {
+  //       merchantAccount: this.merchantAccount,
+  //       merchantAuthType: 'SimpleSignature',
+  //       merchantSignature: signature,
+  //       orderReference,
+  //       orderDate,
+  //       amount,
+  //       currency: purchase.currency,
+  //       productName: purchase.productName,
+  //       productPrice: purchase.productPrice,
+  //       productId: purchase.productId,
+  //       productType,
+  //       productCount: 1,
+  //       returnUrl: this.returnUrl,
+  //       serviceUrl: this.serviceUrl,
+  //     },
+  //   };
+  // }
 
-  async createCONS_ADVPayment(dto: any, user: UserEntity) {
-    // search course by id
-    //search user course purchase by userId and courseId, if payment plan full throw error
-    //if ssk user pay 50% only, after change payment plan - full
-    //if CONSULTING or ADVANCED user pay 1 mounth or pay all teoretikal then change payment plan - full
+  // async createCONS_ADVPayment(dto: any, user: UserEntity) {
+  //   // search course by id
+  //   //search user course purchase by userId and courseId, if payment plan full throw error
+  //   //if ssk user pay 50% only, after change payment plan - full
+  //   //if CONSULTING or ADVANCED user pay 1 mounth or pay all teoretikal then change payment plan - full
 
-    const id = new Types.ObjectId(dto.itemId);
-    // find course
-    const course = await this.courseService.getCourseData(id);
-    if (!course) {
-      throw new BadRequestException('Course not found');
-    }
+  //   const id = new Types.ObjectId(dto.itemId);
+  //   // find course
+  //   const course = await this.courseService.getCourseData(id);
+  //   if (!course) {
+  //     throw new BadRequestException('Course not found');
+  //   }
 
-    //find course purchase
-    const coursePurchase =
-      await this.coursePurchaseService.getCoursePurchaseData(id, user._id);
-    if (coursePurchase?.paymentPlan === 'FULL') {
-      throw new BadRequestException(
-        'You have already purchased this course with full access. Please check your purchases.',
-      );
-    }
-    // check if user already has an active purchase for this course
-    await this.checkCoursePurchase({ email: user.email, itemId: id });
+  //   //find course purchase
+  //   const coursePurchase =
+  //     await this.coursePurchaseService.getCoursePurchaseData(id, user._id);
+  //   if (coursePurchase?.paymentPlan === 'FULL') {
+  //     throw new BadRequestException(
+  //       'You have already purchased this course with full access. Please check your purchases.',
+  //     );
+  //   }
+  //   // check if user already has an active purchase for this course
+  //   await this.checkCoursePurchase({ email: user.email, itemId: id });
 
-    let amount = course.price / 2; // 50% of course price for SSK
+  //   let amount = course.price / 2; // 50% of course price for SSK
 
-    // check for active discount
-    const discount = await this.discountService.findDiscount({
-      refId: course._id,
-    });
-    if (discount) {
-      amount = amount - (amount * discount.discount) / 100;
-    }
+  //   // check for active discount
+  //   const discount = await this.discountService.findDiscount({
+  //     refId: course._id,
+  //   });
+  //   if (discount) {
+  //     amount = amount - (amount * discount.discount) / 100;
+  //   }
 
-    const orderReference = `order_${Date.now()}`;
+  //   const orderReference = `order_${Date.now()}`;
 
-    //check type of product and set targetModule
-    const productType = 'course';
+  //   //check type of product and set targetModule
+  //   const productType = 'course';
 
-    let purchase: PurchaseDocument;
+  //   let purchase: PurchaseDocument;
 
-    if (dto.month) {
-    }
+  //   if (dto.month) {
+  //   }
 
-    purchase = await this.purchaseModel.create({
-      orderReference,
-      productName: course.name,
-      productId: course._id,
-      productPrice: course.price,
-      productType,
-      amount,
-      currency: this.currency,
-      userId: user._id,
-      clientEmail: user.email,
-      clientPhone: user.mobPhone,
-    });
+  //   purchase = await this.purchaseModel.create({
+  //     orderReference,
+  //     productName: course.name,
+  //     productId: course._id,
+  //     productPrice: course.price,
+  //     productType,
+  //     amount,
+  //     currency: this.currency,
+  //     userId: user._id,
+  //     clientEmail: user.email,
+  //     clientPhone: user.mobPhone,
+  //   });
 
-    const orderDate = Math.floor(Date.now() / 1000);
+  //   const orderDate = Math.floor(Date.now() / 1000);
 
-    const signature = this.generateSignature({
-      orderReference,
-      orderDate,
-      amount,
-      currency: this.currency,
-      productName: purchase.productName,
-      productId: purchase.productId,
-      productPrice: purchase.productPrice,
-      productType,
-    });
+  //   const signature = this.generateSignature({
+  //     orderReference,
+  //     orderDate,
+  //     amount,
+  //     currency: this.currency,
+  //     productName: purchase.productName,
+  //     productId: purchase.productId,
+  //     productPrice: purchase.productPrice,
+  //     productType,
+  //     productCount: 1,
+  //   });
 
-    return {
-      status: PaymentStatus.Pending,
-      paymentUrl: 'https://secure.wayforpay.com/pay',
-      formData: {
-        merchantAccount: this.merchantAccount,
-        merchantAuthType: 'SimpleSignature',
-        merchantSignature: signature,
-        orderReference,
-        orderDate,
-        amount,
-        currency: purchase.currency,
-        productName: purchase.productName,
-        productPrice: purchase.productPrice,
-        productId: purchase.productId,
-        productType,
-        returnUrl: this.returnUrl,
-        serviceUrl: this.serviceUrl,
-      },
-    };
-  }
+  //   return {
+  //     status: PaymentStatus.Pending,
+  //     paymentUrl: 'https://secure.wayforpay.com/pay',
+  //     formData: {
+  //       merchantAccount: this.merchantAccount,
+  //       merchantAuthType: 'SimpleSignature',
+  //       merchantSignature: signature,
+  //       orderReference,
+  //       orderDate,
+  //       amount,
+  //       currency: purchase.currency,
+  //       productName: purchase.productName,
+  //       productPrice: purchase.productPrice,
+  //       productId: purchase.productId,
+  //       productType,
+  //       productCount: 1,
+  //       returnUrl: this.returnUrl,
+  //       serviceUrl: this.serviceUrl,
+  //     },
+  //   };
+  // }
 
-  async getStatus(orderReference: string) {
-    // TODO: брати з БД
-    const payment = await this.purchaseModel.findOne({ orderReference });
+  // async getStatus(orderReference: string) {
+  //   // TODO: брати з БД
+  //   const payment = await this.purchaseModel.findOne({ orderReference });
 
-    return {
-      orderReference,
-      status: payment ? payment.status : 'not_found',
-    };
-  }
+  //   return {
+  //     orderReference,
+  //     status: payment ? payment.status : 'not_found',
+  //   };
+  // }
 
   // sse(orderReference: string): Observable<MessageEvent> {
   //   return new Observable<MessageEvent>((observer) => {
@@ -517,22 +522,26 @@ export class PaymentsService {
   }
 
   private generateSignature(data: SignatureDataInterface): string {
-    const str = [
+    const parts = [
       this.merchantAccount,
-      this.serviceUrl,
+      this.merchantDomainName,
       data.orderReference,
       data.orderDate,
       data.amount,
       data.currency,
-      data.productName,
-      data.productId,
-      data.productPrice,
-      data.productType,
-    ].join(';');
+    ];
+
+    data.productName.forEach((name, index) => {
+      parts.push(
+        name,
+        String(data.productCount[index]),
+        String(data.productPrice[index]),
+      );
+    });
 
     return crypto
-      .createHmac('sha1', this.merchantSecretKey)
-      .update(str)
+      .createHmac('md5', this.merchantSecretKey)
+      .update(parts.join(';'))
       .digest('hex');
   }
 
