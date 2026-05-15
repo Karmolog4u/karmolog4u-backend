@@ -44,4 +44,7 @@ export class CreatePurchaseDto {
 
   @IsNumber()
   numberOfPractices: number;
+
+  @IsNumber()
+  price: number;
 }

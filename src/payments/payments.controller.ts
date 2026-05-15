@@ -1,5 +1,11 @@
 import { Body, Controller, Get, Param, Post, Sse } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { Observable } from 'rxjs';
 
 import { PaymentsService } from './payments.service';
@@ -8,6 +14,8 @@ import { User } from 'src/common/decorators/user.decorator';
 import { UserEntity } from 'src/user/dto/user-entity.dto';
 import { PaymentCallbackDto } from './dto/payment-callback.dto';
 import { OptionalAuth } from 'src/common/decorators/optional-auth.decorator';
+import { Roles } from 'src/role/roles.decorator';
+import { Role } from 'src/role/role.enum';
 
 @ApiTags('Payments')
 @Controller('payments')
@@ -24,31 +32,24 @@ export class PaymentsController {
     return this.service.createPayment(body, user);
   }
 
-  // @Post('education/createSSK')
-  // @ApiOperation({ summary: 'Create payment for education' })
-  // @ApiBody({ type: CreatePaymentDto })
-  // @ApiResponse({ status: 201, description: 'Payment created successfully' })
-  // @ApiResponse({ status: 400, description: 'Invalid data' })
-  // createSSK(@Body() dto: CreatePaymentDto, @User() user?: UserEntity) {
-  //   return this.service.createCourseSSKPayment(dto, user);
-  // }
+  @Roles(Role.User)
+  @ApiBearerAuth()
+  @Post('education/create/:id')
+  @ApiOperation({ summary: 'Create payment for education' })
+  @ApiBody({ type: CreatePaymentDto })
+  @ApiResponse({ status: 201, description: 'Payment created successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid data' })
+  createSSK(@Param('id') id: string, @User() user?: UserEntity) {
+    return this.service.createCoursePayment(id, user);
+  }
 
-  // @Post('education/createCONS_ADV')
-  // @ApiOperation({ summary: 'Create payment for education' })
-  // @ApiBody({ type: CreatePaymentDto })
-  // @ApiResponse({ status: 201, description: 'Payment created successfully' })
-  // @ApiResponse({ status: 400, description: 'Invalid data' })
-  // createCONS_ADV(@Body() dto: CreatePaymentDto, @User() user?: UserEntity) {
-  //   return this.service.createCONS_ADVPayment(dto, user);
-  // }
-
-  // @Post('callback')
-  // @ApiOperation({ summary: 'Payment provider callback (WayForPay)' })
-  // @ApiBody({ type: PaymentCallbackDto })
-  // @ApiResponse({ status: 200, description: 'Callback processed' })
-  // callback(@Body() body: PaymentCallbackDto) {
-  //   return this.service.handleCallback(body);
-  // }
+  @Post('callback')
+  @ApiOperation({ summary: 'Payment provider callback (WayForPay)' })
+  @ApiBody({ type: PaymentCallbackDto })
+  @ApiResponse({ status: 200, description: 'Callback processed' })
+  async callback(@Body() body: PaymentCallbackDto) {
+    return this.service.handleProductCallback(body);
+  }
 
   // @Get(':orderReference/status')
   // status(@Param('orderReference') orderReference: string) {

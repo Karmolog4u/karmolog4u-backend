@@ -10,5 +10,6 @@ import { ConfigModule } from '@nestjs/config';
   imports: [PurchaseModule, UserModule, MailModule, ConfigModule],
   controllers: [ProductPurchaseController],
   providers: [ProductPurchaseService],
+  exports: [ProductPurchaseService],
 })
 export class ProductPurchaseModule {}

@@ -537,7 +537,6 @@ export class CourseService {
               {
                 $and: [
                   { 'access.type': 'TO_DATE' },
-                  { 'access.dateStart': { $lte: new Date() } },
                   { 'access.dateEnd': { $gte: new Date() } },
                 ],
               },

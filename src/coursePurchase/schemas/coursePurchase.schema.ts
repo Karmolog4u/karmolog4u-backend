@@ -73,6 +73,9 @@ export class CoursePurchase {
   })
   agreement: false;
 
+  @Prop({ required: true, type: Number })
+  price: number;
+
   //кількість практик
   @Prop({
     required: false,
