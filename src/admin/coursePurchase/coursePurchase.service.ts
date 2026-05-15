@@ -32,6 +32,7 @@ export class CoursePurchaseService {
     courseId: string,
     paymentPlan: 'FULL' | 'PARTIAL' | 'INSTALLMENT',
   ) {
+    const ssk = ['SSK_INDEPENDENT', 'SSK_WITH_CURATOR', 'SSK_WITH_SERGIY'];
     try {
       const purchase = await this.coursePurchaseModel.findOne({
         userId: new Types.ObjectId(userId),
@@ -55,6 +56,7 @@ export class CoursePurchaseService {
         courseId: courseId,
         status: 'ACTIVE',
         paymentPlan,
+        price: course.price,
       };
 
       Data.accessType = course.access.type;
@@ -81,11 +83,7 @@ export class CoursePurchaseService {
         Data.availableTo = plus100Years;
       }
 
-      if (
-        course.type === 'SSK_INDEPENDENT' ||
-        course.type === 'SSK_WITH_CURATOR' ||
-        course.type === 'SSK_WITH_SERGIY'
-      ) {
+      if (ssk.includes(course.type)) {
         Data.availableTo = Data.accessEndDate;
       }
 
@@ -104,11 +102,7 @@ export class CoursePurchaseService {
         Data.availableTo = dateNowPlusMonths;
       }
 
-      if (
-        course.type === 'SSK_INDEPENDENT' ||
-        course.type === 'SSK_WITH_CURATOR' ||
-        course.type === 'SSK_WITH_SERGIY'
-      ) {
+      if (ssk.includes[course.type]) {
         const lessons = await this.lessonModel
           .find({
             targetId: course._id,
@@ -187,6 +181,7 @@ export class CoursePurchaseService {
         paymentPlan: purchase.paymentPlan,
         accessType: purchase.accessType,
         availableTo: purchase.availableTo,
+        price: purchase.price,
       }));
     } catch (error) {
       throw new BadRequestException('Не вдалося отримати покупки користувача');

@@ -168,6 +168,7 @@ export class CoursePurchaseService {
           paymentPlan: '$paymentPlan',
           accessEndDate: 1,
           availableTo: 1,
+          paymentTypes: '$course.paymentTypes',
         },
       },
     ]);
