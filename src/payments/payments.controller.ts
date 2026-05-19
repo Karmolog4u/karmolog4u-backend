@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Sse } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, Sse } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -49,19 +49,12 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Payment provider callback (WayForPay)' })
   @ApiBody({ type: PaymentCallbackDto })
   @ApiResponse({ status: 200, description: 'Callback processed' })
-  async callback(@Body() body: PaymentCallbackDto) {
-    return this.service.handleProductCallback(body);
+  async callback(@Body() body: PaymentCallbackDto, @Req() req: Request) {
+    console.log('req: ', req);
+    const payload =
+      typeof Object.keys(body)[0] === 'string'
+        ? JSON.parse(Object.keys(body)[0])
+        : body;
+    return this.service.handleProductCallback(payload);
   }
-
-  // @Get(':orderReference/status')
-  // status(@Param('orderReference') orderReference: string) {
-  //   return this.service.getStatus(orderReference);
-  // }
-
-  //   @Sse('sse/:orderReference')
-  //   sse(
-  //     @Param('orderReference') orderReference: string,
-  //   ): Observable<MessageEvent> {
-  //     return this.service.sse(orderReference);
-  //   }
 }
