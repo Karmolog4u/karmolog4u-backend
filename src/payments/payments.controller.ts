@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req, Sse } from '@nestjs/common';
+import { Body, Controller, Param, Post } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -49,8 +49,7 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Payment provider callback (WayForPay)' })
   @ApiBody({ type: PaymentCallbackDto })
   @ApiResponse({ status: 200, description: 'Callback processed' })
-  async callback(@Body() body: PaymentCallbackDto, @Req() req: Request) {
-    console.log('req: ', req);
+  async callback(@Body() body: PaymentCallbackDto) {
     const payload =
       typeof Object.keys(body)[0] === 'string'
         ? JSON.parse(Object.keys(body)[0])
