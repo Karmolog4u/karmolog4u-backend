@@ -252,6 +252,8 @@ export class PaymentsService {
     purchase.transactionStatus = data.transactionStatus;
     purchase.rawResponse = data;
 
+    console.log('purchase2: ', purchase);
+
     switch (data.transactionStatus) {
       case 'Approved':
         purchase.status = PurchaseStatus.APPROVED;
@@ -268,6 +270,10 @@ export class PaymentsService {
 
     purchase.processed = true;
     await purchase.save();
+
+    console.log('purchase3: ', purchase);
+
+    console.log('response: ', this.buildAcceptResponse(data.orderReference));
 
     return this.buildAcceptResponse(data.orderReference);
   }

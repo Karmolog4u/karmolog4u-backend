@@ -43,7 +43,7 @@ export class PaymentsController {
     return this.service.createCoursePayment(id, user);
   }
 
-  @Post('callback')
+  @Post('products/callback')
   @ApiOperation({ summary: 'Payment provider callback (WayForPay)' })
   @ApiBody({ type: PaymentCallbackDto })
   @ApiResponse({ status: 200, description: 'Callback processed' })
