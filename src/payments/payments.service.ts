@@ -487,6 +487,8 @@ export class PaymentsService {
 
     if (!existingUser) {
       // optional: email fallback
+      console.log('sent email');
+      
       return;
     }
 

@@ -16,6 +16,7 @@ import { PaymentCallbackDto } from './dto/payment-callback.dto';
 import { OptionalAuth } from 'src/common/decorators/optional-auth.decorator';
 import { Roles } from 'src/role/roles.decorator';
 import { Role } from 'src/role/role.enum';
+import { Public } from 'src/common/decorators/isPublic.decorator';
 
 @ApiTags('Payments')
 @Controller('payments')
@@ -43,6 +44,7 @@ export class PaymentsController {
     return this.service.createCoursePayment(id, user);
   }
 
+  @Public()
   @Post('products/callback')
   @ApiOperation({ summary: 'Payment provider callback (WayForPay)' })
   @ApiBody({ type: PaymentCallbackDto })
