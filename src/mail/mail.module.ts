@@ -14,7 +14,7 @@ import { join } from 'path';
         transport: {
           host: config.get<string>('MAIL_HOST'), // SMTP server
           port: config.get<number>('MAIL_PORT'), // SMTP port
-          secure: true, // upgrade later with STARTTLS
+          secure: false, // upgrade later with STARTTLS
           auth: {
             user: config.get<string>('MAIL_USER'), // SMTP user
             pass: config.get<string>('MAIL_PASSWORD'), // SMTP password

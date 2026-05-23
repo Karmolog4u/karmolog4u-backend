@@ -1,4 +1,10 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  Logger,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as crypto from 'crypto';
@@ -22,7 +28,6 @@ import { CourseService } from 'src/user/education/course.service';
 import { CoursePurchaseService } from 'src/coursePurchase/coursePurchase.service';
 import { UserEntity } from 'src/user/dto/user-entity.dto';
 import { PaymentStatus } from './emun/payment-status.enum';
-// import { RedisPubSubService } from 'src/redis/redis-pubsub.service';
 import { Observable } from 'rxjs';
 import { v4 as uuid } from 'uuid';
 import {
@@ -31,6 +36,10 @@ import {
   consultingPercentage,
   consultingTotalPayments,
 } from 'src/common/helper/consts';
+import { MailService } from 'src/mail/mail.service';
+import * as path from 'path';
+import { existsSync } from 'fs';
+import { ModuleService } from 'src/admin/education/module/module.service';
 
 interface SignatureDataInterface {
   orderReference: string;
@@ -51,6 +60,8 @@ export class PaymentsService {
   private serviceEdUrl: string;
   private currency: string;
   private merchantDomainName: string;
+  private readonly logger = new Logger(PaymentsService.name);
+
   constructor(
     @InjectModel(Purchase.name)
     private purchaseModel: Model<PurchaseDocument>,
@@ -62,8 +73,9 @@ export class PaymentsService {
     private readonly promoCodeService: PromoCodeService,
     private readonly courseService: CourseService,
     private readonly coursePurchaseService: CoursePurchaseService,
-    // private readonly redis: RedisPubSubService,
     private readonly configService: ConfigService,
+    private readonly mailService: MailService,
+    private readonly modulesService: ModuleService,
   ) {
     this.merchantAccount = this.configService.getOrThrow('WFP_MERCHANT');
     this.merchantSecretKey = this.configService.getOrThrow('WFP_SECRET');
@@ -118,26 +130,34 @@ export class PaymentsService {
         throw new BadRequestException('Некоректний промокод');
       }
     }
-    const orderReference = `order_${uuid()}`;
+    const orderReference = `order_${now}_${product._id}_${product.price}`;
 
     //check type of product and set targetModule
-    const productType = await this.productService.getProductTypeById(
+    const noFormattedProductType = await this.productService.getProductTypeById(
       dto.itemId,
     );
 
-    const returnProductUrl = () => {
-      productType === 'guide'
-        ? `${this.returnUrl}guides-and-books`
-        : productType === 'webinar'
-        ? `${this.returnUrl}courses`
-        : `${this.returnUrl}meditations`;
-    };
-
-    if (!productType) {
+    if (!noFormattedProductType) {
       throw new BadRequestException('Продукта не знайдено');
     }
 
-    // if user is authenticated, we can link the purchase to their account
+    const productTypeMap = {
+      meditation: 'Meditations',
+      webinar: 'Webinars',
+      guide: 'GuidesAndBooks',
+    } as const;
+
+    const productType = noFormattedProductType
+      ? productTypeMap[noFormattedProductType]
+      : null;
+
+    const returnProductUrl = () => {
+      noFormattedProductType === 'guide'
+        ? `${this.returnUrl}guides-and-books`
+        : noFormattedProductType === 'webinar'
+        ? `${this.returnUrl}courses`
+        : `${this.returnUrl}meditations`;
+    };
 
     let purchase: PurchaseDocument;
 
@@ -192,7 +212,7 @@ export class PaymentsService {
       });
     }
 
-    const orderDate = Math.floor(Date.now() / 1000);
+    const orderDate = Math.floor(now / 1000);
 
     const signature = this.generateSignature({
       orderReference,
@@ -237,8 +257,11 @@ export class PaymentsService {
       throw new BadRequestException('Order not found');
     }
 
+    const status =
+      purchase.status === PurchaseStatus.APPROVED ? 'accept' : 'reject';
+
     if (purchase.processed) {
-      return this.buildAcceptResponse(data.orderReference);
+      return this.buildCallbackResponse(data.orderReference, status);
     }
 
     if (!this.verifyCallbackSignature(data)) {
@@ -256,6 +279,10 @@ export class PaymentsService {
       case 'Declined':
         purchase.status = PurchaseStatus.DECLINED;
         break;
+
+      default:
+        purchase.status = PurchaseStatus.DECLINED;
+        break;
     }
 
     if (purchase.status === PurchaseStatus.APPROVED) {
@@ -263,11 +290,11 @@ export class PaymentsService {
     }
 
     purchase.processed = true;
+    purchase.expiresAt = undefined;
+
     await purchase.save();
 
-    console.log('response: ', this.buildAcceptResponse(data.orderReference));
-
-    return this.buildAcceptResponse(data.orderReference);
+    return this.buildCallbackResponse(data.orderReference, status);
   }
 
   async createCoursePayment(courseId: string, user: UserEntity) {
@@ -277,14 +304,22 @@ export class PaymentsService {
     );
 
     const { price } = coursePurchase;
-
+    const type = 'course';
     // check if user already has an active purchase for this course
-    await this.checkCoursePurchase({ email: user.email, itemId: id });
+    await this.checkCoursePurchase({
+      email: user.email,
+      itemId: id,
+      type,
+    });
 
-    const orderReference = `order_${Date.now()}`;
+    const now = Date.now();
+
+    const orderReference = `order_${now}_${id}_${coursePurchase.price}_${
+      coursePurchase.numberOfPayments + 1
+    }`;
 
     //check type of product and set targetModule
-    const productType = 'course';
+    const productType = type;
 
     const { paymentType, amount } = this.calculatePaymentData(
       price,
@@ -295,7 +330,7 @@ export class PaymentsService {
       orderReference,
       productName: course.name,
       productId: course._id,
-      productPrice: coursePurchase.price,
+      productPrice: price,
       productType,
       paymentType,
       amount,
@@ -305,7 +340,7 @@ export class PaymentsService {
       clientPhone: user.mobPhone,
     });
 
-    const orderDate = Math.floor(Date.now() / 1000);
+    const orderDate = Math.floor(now / 1000);
 
     const signature = this.generateSignature({
       orderReference,
@@ -334,58 +369,144 @@ export class PaymentsService {
         productPrice: [purchase.productPrice],
         productCount: [1],
         returnUrl: `${this.returnUrl}cabinet/dashboard/user/education`,
-        serviceUrl: this.serviceUrl,
+        serviceUrl: this.serviceEdUrl,
       },
     };
   }
 
-  async getStatus(orderReference: string) {
-    // TODO: брати з БД
-    const payment = await this.purchaseModel.findOne({ orderReference });
+  async handleEducationCallback(data: any) {
+    const { orderReference, transactionStatus } = data;
+    const purchase = await this.purchaseModel
+      .findOne({
+        orderReference: orderReference,
+      })
+      .exec();
+
+    if (!purchase) {
+      return this.buildCallbackResponse(orderReference, 'reject');
+    }
+
+    if (!this.verifyCallbackSignature(data)) {
+      return this.buildCallbackResponse(orderReference, 'reject');
+    }
+
+    if (purchase.processed && purchase.status === PurchaseStatus.APPROVED) {
+      return this.buildCallbackResponse(orderReference, 'accept');
+    }
+
+    const previousStatus = purchase.status;
+    purchase.transactionStatus = transactionStatus;
+    purchase.rawResponse = data;
+
+    switch (transactionStatus) {
+      case 'Approved':
+        purchase.status = PurchaseStatus.APPROVED;
+        break;
+
+      default:
+        purchase.status = PurchaseStatus.DECLINED;
+        break;
+    }
+    const isFirstApproval =
+      previousStatus === PurchaseStatus.PENDING &&
+      purchase.status === PurchaseStatus.APPROVED;
+
+    if (isFirstApproval && purchase.productType === 'course') {
+      try {
+        await this.processEducationBusinessLogic(purchase);
+        purchase.expiresAt = undefined;
+      } catch (error) {
+        this.logger.error('Business logic failed', error);
+      }
+    }
+
+    if (isFirstApproval && purchase.productType === 'practice') {
+      try {
+        await this.updateNumberOfPractices(purchase);
+      } catch (error) {
+        this.logger.error('Business logic failed', error);
+      }
+    }
+    purchase.processed = true;
+
+    await purchase.save();
+    const responseStatus =
+      purchase.status === PurchaseStatus.APPROVED ? 'accept' : 'reject';
+    return this.buildCallbackResponse(orderReference, responseStatus);
+  }
+
+  async createPracticeInvoice(courseId: string, user: UserEntity) {
+    const { id, course, coursePurchase } = await this.validateCoursePayment(
+      courseId,
+      user,
+    );
+    await this.validatePracticeModules(coursePurchase, String(id));
+    const { practiceInvoice } = course;
+
+    const type = 'practice';
+    // check if user already has an active purchase for this course
+    await this.checkCoursePurchase({
+      email: user.email,
+      itemId: id,
+      type,
+    });
+    const now = Date.now();
+    const orderReference = `order_${now}_${id}_${practiceInvoice}_${
+      coursePurchase.numberOfPractices + 1
+    }`;
+
+    //check type of product and set targetModule
+    const productType = type;
+
+    const purchase: PurchaseDocument = await this.purchaseModel.create({
+      orderReference,
+      productName: course.name,
+      productId: course._id,
+      productPrice: practiceInvoice,
+      productType,
+      paymentType: 'MONTHLY',
+      amount: practiceInvoice,
+      currency: this.currency,
+      userId: user._id,
+      clientEmail: user.email,
+      clientPhone: user.mobPhone,
+    });
+
+    const orderDate = Math.floor(now / 1000);
+
+    const signature = this.generateSignature({
+      orderReference,
+      orderDate,
+      amount: practiceInvoice,
+      currency: this.currency,
+      productName: [purchase.productName],
+      productPrice: [purchase.productPrice],
+      productCount: [1],
+    });
 
     return {
       orderReference,
-      status: payment ? payment.status : 'not_found',
+      status: PaymentStatus.Pending,
+      paymentUrl: 'https://secure.wayforpay.com/pay',
+      formData: {
+        merchantAccount: this.merchantAccount,
+        merchantAuthType: 'SimpleSignature',
+        merchantSignature: signature,
+        merchantDomainName: this.merchantDomainName,
+        orderReference,
+        orderDate,
+        amount: practiceInvoice,
+        currency: this.currency,
+        productName: [purchase.productName],
+        productPrice: [purchase.productPrice],
+        productCount: [1],
+        returnUrl: `${this.returnUrl}cabinet/dashboard/user/user/course/${
+          course.type === 'CONSULTING' ? 'consulting' : 'advanced'
+        }/${id}`,
+        serviceUrl: this.serviceEdUrl,
+      },
     };
   }
-
-  // sse(orderReference: string): Observable<MessageEvent> {
-  //   return new Observable<MessageEvent>((observer) => {
-  //     const channel = `payment:${orderReference}`;
-  //     let unsubscribe: (() => Promise<void>) | null = null;
-
-  //     this.redis
-  //       .subscribe(channel, (payload) => {
-  //         observer.next({
-  //           data: payload,
-  //         } as MessageEvent);
-
-  //         if (payload.status !== PaymentStatus.Pending) {
-  //           observer.complete();
-  //         }
-  //       })
-  //       .then((unsub) => {
-  //         unsubscribe = unsub;
-  //       });
-
-  //     const heartbeat = setInterval(() => {
-  //       observer.next({
-  //         data: {
-  //           type: 'ping',
-  //           time: Date.now(),
-  //         },
-  //       } as MessageEvent);
-  //     }, 15000);
-
-  //     return () => {
-  //       clearInterval(heartbeat);
-
-  //       if (unsubscribe) {
-  //         unsubscribe();
-  //       }
-  //     };
-  //   });
-  // }
 
   private verifyCallbackSignature(body: any): boolean {
     const signatureString = [
@@ -407,16 +528,19 @@ export class PaymentsService {
     return expectedSignature === body.merchantSignature;
   }
 
-  private buildAcceptResponse(orderReference: string) {
+  private buildCallbackResponse(
+    orderReference: string,
+    status: 'accept' | 'reject',
+  ) {
     const time = Math.floor(Date.now() / 1000);
 
     return {
       orderReference,
-      status: 'accept',
+      status,
       time,
       signature: this.generateCallbackResponseSignature(
         orderReference,
-        'accept',
+        status,
         time,
       ),
     };
@@ -464,33 +588,6 @@ export class PaymentsService {
       .digest('hex');
   }
 
-  private successResponse(orderReference: string) {
-    return {
-      orderReference,
-      status: 'accept',
-      time: Date.now(),
-    };
-  }
-
-  private async processBusinessLogic(purchase: PurchaseDocument) {
-    const existingUser = await this.userModel.findOne({
-      email: purchase.clientEmail,
-    });
-
-    if (!existingUser) {
-      // optional: email fallback
-      console.log('sent email');
-
-      return;
-    }
-
-    await this.productPurchaseModel.create({
-      userId: existingUser._id,
-      productId: purchase.productId,
-      targetModule: purchase.productType,
-    });
-  }
-
   private async checkExistingUser(dto: any) {
     const existingUser = await this.userModel.findOne({ email: dto.email });
     if (existingUser) {
@@ -512,13 +609,13 @@ export class PaymentsService {
           throw new BadRequestException(
             'Для цієї електронної адреси та продукту вже є покупка, що очікує на розгляд. Будь ласка, завершіть її, перш ніж створювати нову.',
           );
-        case PurchaseStatus.DECLINED:
-          throw new BadRequestException(
-            'Вашу попередню покупку цього товару було відхилено. Будь ласка, спробуйте ще раз або зверніться до служби підтримки.',
-          );
         case PurchaseStatus.APPROVED:
           throw new BadRequestException(
             'Ви вже придбали цей товар, використовуючи цю електронну адресу. Будь ласка, перевірте свої покупки.',
+          );
+        default:
+          throw new InternalServerErrorException(
+            'Щось пішло не так, зверніться до адміністратора',
           );
       }
     }
@@ -555,6 +652,19 @@ export class PaymentsService {
     };
   }
 
+  private async validatePracticeModules(
+    coursePurchase: { numberOfPractices: number },
+    id: string,
+  ) {
+    const modulesNumber = await this.modulesService.getPractices(id);
+    if (modulesNumber === 0) {
+      throw new BadRequestException('Немає доступних практик');
+    }
+    if (modulesNumber === coursePurchase.numberOfPractices) {
+      throw new BadRequestException('Всі доступні практики в же куплені');
+    }
+  }
+
   private calculatePaymentData(price: number, type: string) {
     const defaultConfig = {
       amount: price / 2,
@@ -579,23 +689,136 @@ export class PaymentsService {
   private async checkCoursePurchase(dto: {
     email: string;
     itemId: Types.ObjectId;
+    type: string;
   }) {
-    const existingPurchase = await this.purchaseModel.findOne({
+    const pendingPurchase = await this.purchaseModel.findOne({
       clientEmail: dto.email,
       productId: dto.itemId,
+      status: PurchaseStatus.PENDING,
+      productType: dto.type,
     });
 
-    if (existingPurchase) {
-      switch (existingPurchase.status) {
-        case PurchaseStatus.PENDING:
-          throw new BadRequestException(
-            'There is already a pending purchase for this email and product. Please complete it before creating a new one.',
-          );
-        case PurchaseStatus.APPROVED:
-          throw new BadRequestException(
-            'You have already purchased this product with this email. Please check your purchases.',
-          );
-      }
+    if (pendingPurchase) {
+      throw new BadRequestException(
+        'Для цього продукту вже існує незавершена оплата.',
+      );
     }
+  }
+
+  private async processBusinessLogic(purchase: PurchaseDocument) {
+    const existingUser = await this.userModel.findOne({
+      email: purchase.clientEmail,
+    });
+
+    if (!existingUser) {
+      const product = await this.productService.getProductDetails(
+        purchase.productId.toString(),
+      );
+      if (purchase.productType === 'GuidesAndBooks') {
+        const guide = product as any;
+        const STORAGE_ROOT = path.join(process.cwd(), '..', 'storage');
+        const filePath = path.join(STORAGE_ROOT, guide.file.path);
+
+        if (!existsSync(filePath)) {
+          throw new Error(`File not found: ${filePath}`);
+        }
+
+        await this.mailService.sendEmail(
+          purchase.clientEmail,
+          purchase.productName,
+          'guidesAndBooksPurchase',
+          { productName: purchase.productName },
+          {
+            filename: guide.file.originalName,
+            path: filePath,
+          },
+        );
+
+        return;
+      }
+      await this.mailService.sendEmail(
+        purchase.clientEmail,
+        purchase.productName,
+        'purchaseProductNoEmail',
+        {
+          videoUrl: `https://youtube.com/watch?v=${product.video}`,
+        },
+      );
+
+      return;
+    }
+
+    await this.productPurchaseModel.create({
+      userId: existingUser._id,
+      productId: purchase.productId,
+      targetModule: purchase.productType,
+    });
+  }
+  private async processEducationBusinessLogic(purchase: PurchaseDocument) {
+    const sskList = ['SSK_INDEPENDENT', 'SSK_WITH_CURATOR', 'SSK_WITH_SERGIY'];
+    if (!purchase.userId) {
+      throw new BadRequestException('Користувача не знайдено');
+    }
+    const coursePurchase =
+      await this.coursePurchaseService.getCoursePurchaseData(
+        purchase.userId,
+        purchase.productId,
+      );
+    if (!coursePurchase) {
+      throw new NotFoundException('Курс не знайдено');
+    }
+    const course = await this.courseService.getCourseDetail(
+      purchase.userId,
+      purchase.productId,
+    );
+    if (sskList.includes(course.type)) {
+      const lessons = await this.courseService.getLessonsSSK(
+        purchase.userId,
+        purchase.productId,
+      );
+      coursePurchase.paymentPlan = 'FULL';
+      coursePurchase.lessonsUnlocked = lessons.map((l) => l.id);
+
+      await coursePurchase.save();
+      return;
+    }
+
+    const paymentPlansMap = {
+      CONSULTING: consultingTotalPayments,
+      ADVANCED: advTotalPayments,
+    };
+    const totalPayments = paymentPlansMap[course.type];
+    if (totalPayments) {
+      coursePurchase.numberOfPayments += 1;
+
+      const isLastPayment = coursePurchase.numberOfPayments === totalPayments;
+
+      const nextMonth = new Date(coursePurchase.availableTo);
+
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+      coursePurchase.availableTo = isLastPayment
+        ? coursePurchase.accessEndDate
+        : nextMonth;
+
+      if (isLastPayment) {
+        coursePurchase.paymentPlan = 'FULL';
+      }
+
+      await coursePurchase.save();
+    }
+  }
+
+  private async updateNumberOfPractices(purchase: PurchaseDocument) {
+    const coursePurchase =
+      await this.coursePurchaseService.getCoursePurchaseData(
+        purchase.userId,
+        purchase.productId,
+      );
+    if (!coursePurchase) {
+      throw new NotFoundException('Курс не знайдено');
+    }
+    coursePurchase.numberOfPractices += 1;
+    await coursePurchase.save();
   }
 }

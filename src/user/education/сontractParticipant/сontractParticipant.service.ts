@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { ContractParticipant } from './schemas/сontractParticipant.schema';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { MailService } from 'src/mail/mail.service';
 import { UserEntity } from 'src/user/dto/user-entity.dto';
 import { SignDto } from './dto/sign.dto';
@@ -179,7 +179,7 @@ export class ContractParticipantService {
     });
   }
 
-  async getContractDetails(user: UserEntity, courseId: string) {
+  async getContractDetails(user: UserEntity, courseId: Types.ObjectId) {
     const purchase = await this.coursePurchaseModel.findOne({
       userId: user._id,
       courseId: courseId,

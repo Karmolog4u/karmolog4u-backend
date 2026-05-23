@@ -182,34 +182,6 @@ export class CoursePurchaseController {
     }
   }
 
-  // @Post('lesson-half-access/:purchaseId')
-  // @ApiOperation({
-  //   summary: 'Admin Change Status Course Purchase',
-  //   description: 'Access restricted to admins',
-  // })
-  // @ApiNotFoundResponse({
-  //   description: 'Покупку з ід ${purchaseId} не знайдено',
-  // })
-  // async lessonHalfAccessPurchase(@Param() param: PurchaseIdDto) {
-  //   try {
-  //     return await this.coursePurchaseService.halfAccessLesson(
-  //       param.purchaseId,
-  //     );
-  //   } catch (error) {
-  //     throw new HttpException(
-  //       {
-  //         status: error.status,
-  //         message: error.response.message,
-  //         error: error.response.error,
-  //       },
-  //       error.status,
-  //       {
-  //         cause: error,
-  //       },
-  //     );
-  //   }
-  // }
-
   @Post('complete-access/:purchaseId')
   @ApiOperation({
     summary: 'Admin Change Status Course Purchase',

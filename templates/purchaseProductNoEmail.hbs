@@ -1,0 +1,88 @@
+<html lang='uk'>
+  <head>
+    <meta charset='UTF-8' />
+    <title>Дякуємо за покупку</title>
+  </head>
+  <body
+    style='
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+    '
+  >
+    <table width='100%' cellpadding='0' cellspacing='0' style='padding: 40px 0'>
+      <tr>
+        <td align='center'>
+          <table
+            width='600'
+            cellpadding='0'
+            cellspacing='0'
+            style='
+              background-color: #ffffff;
+              border-radius: 12px;
+              padding: 40px;
+            '
+          >
+            <tr>
+              <td align='center'>
+                <h1 style='margin-bottom: 24px; color: #222222'>
+                  Дякуємо за покупку 🎉
+                </h1>
+
+                <p
+                  style='
+                    font-size: 16px;
+                    line-height: 1.6;
+                    color: #555555;
+                    margin-bottom: 32px;
+                  '
+                >
+                  Дякуємо за покупку нашого продукту. Нижче знаходиться
+                  посилання на сам продукт — користуйтесь із задоволенням!
+                </p>
+
+                <a
+                  href='{{videoUrl}}'
+                  target='_blank'
+                  style='
+                    display: inline-block;
+                    padding: 14px 28px;
+                    background-color: #000000;
+                    color: #ffffff;
+                    text-decoration: none;
+                    border-radius: 8px;
+                    font-size: 16px;
+                    font-weight: bold;
+                  '
+                >
+                  Перейти до продукту
+                </a>
+
+                <p
+                  style='
+                    margin-top: 40px;
+                    font-size: 14px;
+                    color: #999999;
+                  '
+                >
+                  Якщо кнопка не працює, відкрийте посилання вручну:
+                </p>
+
+                <p
+                  style='
+                    font-size: 14px;
+                    word-break: break-all;
+                    color: #666666;
+                  '
+                >
+                  {{videoUrl}}
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

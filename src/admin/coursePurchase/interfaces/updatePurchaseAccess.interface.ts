@@ -4,4 +4,5 @@ export interface UpdatePurchaseAccess {
   paymentPlan?: 'FULL' | 'PARTIAL';
   lessonsUnlocked?: Types.ObjectId[];
   availableTo?: Date;
+  numberOfPayments?: number;
 }
