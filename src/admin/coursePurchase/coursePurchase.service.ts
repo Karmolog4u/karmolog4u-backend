@@ -16,6 +16,11 @@ import { AddCoursePurchaseDto } from './dto/add-course-purchase.dto';
 import { Lesson } from '../education/lessons/schemas/lesson.schema';
 import { Module } from '../education/module/schemas/module.schema';
 import { UpdatePurchaseAccess } from './interfaces/updatePurchaseAccess.interface';
+import { CourseService } from '../education/course/course.service';
+import {
+  advTotalPayments,
+  consultingTotalPayments,
+} from 'src/common/helper/consts';
 
 @Injectable()
 export class CoursePurchaseService {
@@ -25,6 +30,7 @@ export class CoursePurchaseService {
     @InjectModel(Course.name) private courseModel: Model<Course>,
     @InjectModel(Lesson.name) private lessonModel: Model<Lesson>,
     @InjectModel(Module.name) private moduleModel: Model<Module>,
+    private readonly courseService: CourseService,
   ) {}
 
   async addCoursePurchase(
@@ -252,6 +258,7 @@ export class CoursePurchaseService {
         {
           $set: {
             availableTo: newAvailableTo,
+            numberOfPayments: (purchase.numberOfPayments += 1),
           },
         },
         { new: true, runValidators: true },
@@ -403,7 +410,15 @@ export class CoursePurchaseService {
       if (purchase.accessType !== 'PERMANENT') {
         updateData.availableTo = purchase.accessEndDate;
       }
-
+      const course = await this.courseService.getCourseById(purchase.courseId);
+      const paymentPlansMap = {
+        CONSULTING: consultingTotalPayments,
+        ADVANCED: advTotalPayments,
+      };
+      const totalPayments = paymentPlansMap[course.type];
+      if (totalPayments) {
+        updateData.numberOfPayments = totalPayments;
+      }
       const updatePurchase = await this.coursePurchaseModel.findByIdAndUpdate(
         purchaseId,
         {

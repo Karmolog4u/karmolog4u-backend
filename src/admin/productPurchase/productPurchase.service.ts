@@ -123,14 +123,14 @@ export class ProductPurchaseService {
                 { $gt: [{ $size: '$meditation' }, 0] },
                 {
                   name: { $arrayElemAt: ['$meditation.name.uk', 0] },
-                  targetModule: 'Meditation',
+                  targetModule: 'Meditations',
                 },
                 {
                   $cond: [
                     { $gt: [{ $size: '$webinar' }, 0] },
                     {
                       name: { $arrayElemAt: ['$webinar.name.uk', 0] },
-                      targetModule: 'Webinar',
+                      targetModule: 'Webinars',
                     },
                     {
                       name: { $arrayElemAt: ['$guide.name.uk', 0] },
@@ -205,14 +205,14 @@ export class ProductPurchaseService {
                 { $gt: [{ $size: '$meditation' }, 0] },
                 {
                   name: { $arrayElemAt: ['$meditation.name.uk', 0] },
-                  targetModule: 'Meditation',
+                  targetModule: 'Meditations',
                 },
                 {
                   $cond: [
                     { $gt: [{ $size: '$webinar' }, 0] },
                     {
                       name: { $arrayElemAt: ['$webinar.name.uk', 0] },
-                      targetModule: 'Webinar',
+                      targetModule: 'Webinars',
                     },
                     {
                       $cond: [

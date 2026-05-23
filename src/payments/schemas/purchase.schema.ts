@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { Document } from 'mongoose';
+import mongoose, { Document, Types } from 'mongoose';
 
 export type PurchaseDocument = Purchase & Document;
 
@@ -31,7 +31,7 @@ export class Purchase {
   productName: string;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Product' })
-  productId: mongoose.Schema.Types.ObjectId;
+  productId: Types.ObjectId;
 
   @Prop({ type: String })
   productType: string;
@@ -64,7 +64,14 @@ export class Purchase {
   rawResponse: any;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null })
-  userId: mongoose.Schema.Types.ObjectId;
+  userId: Types.ObjectId;
+
+  @Prop({
+    type: Date,
+    expires: 0,
+    default: () => new Date(Date.now() + 5 * 60 * 60 * 1000),
+  })
+  expiresAt?: Date;
 }
 
 export const PurchaseSchema = SchemaFactory.createForClass(Purchase);

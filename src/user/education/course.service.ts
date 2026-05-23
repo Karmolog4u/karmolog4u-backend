@@ -19,6 +19,7 @@ import { getCourseTypeShortName } from './helpers/course-type.helper';
 // import { GcsService } from 'src/gcs/gcs.service';
 import { trimAnyEmailDomain } from 'src/common/helper/trimEmailDomain';
 import { DriveService } from 'src/drive/drive.service';
+import { ModuleService } from 'src/admin/education/module/module.service';
 
 @Injectable()
 export class CourseService {
@@ -32,12 +33,18 @@ export class CourseService {
     @Inject(MailService) private mailService: MailService,
     // @Inject(GcsService) private gcsService: GcsService,
     @Inject(DriveService) private driveService: DriveService,
+    private moduleService: ModuleService,
     private configService: ConfigService,
   ) {}
 
   // file return
-  async getCourseDetail(userId: any, courseId: any) {
+  async getCourseDetail(userId: Types.ObjectId, courseId: Types.ObjectId) {
     const course = await this.courseModel.findById(courseId);
+
+    if (!course) {
+      throw new NotFoundException('Курс не знайдено');
+    }
+
     const optionalFiles = await this.filesModel
       .find(
         {
@@ -52,11 +59,8 @@ export class CourseService {
       )
       .lean({ virtuals: false });
 
-    if (!course) {
-      throw new NotFoundException('Курс не знайдено');
-    }
     const cleanCourse = course.toObject({ versionKey: false, virtuals: true });
-
+    const numberOfPractices = await this.moduleService.getPractices(course.id);
     const purchase = await this.coursePurchaseModel.findOne({
       userId,
       courseId,
@@ -67,6 +71,7 @@ export class CourseService {
 
     return {
       ...cleanCourse,
+      numberOfPractices,
       optionalFiles,
       purchaseInfo: purchase,
     };
@@ -172,7 +177,7 @@ export class CourseService {
     return modules;
   }
 
-  async getLesson(userId: any, lessonId: string) {
+  async getLesson(userId: any, lessonId: Types.ObjectId) {
     const now = Date.now();
 
     // 1. Find lesson by ID

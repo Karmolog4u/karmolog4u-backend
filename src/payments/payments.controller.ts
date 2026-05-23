@@ -40,13 +40,29 @@ export class PaymentsController {
   @ApiBody({ type: CreatePaymentDto })
   @ApiResponse({ status: 201, description: 'Payment created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid data' })
-  createSSK(@Param('id') id: string, @User() user?: UserEntity) {
+  createCoursePayment(@Param('id') id: string, @User() user?: UserEntity) {
     return this.service.createCoursePayment(id, user);
+  }
+
+  @Roles(Role.User)
+  @ApiBearerAuth()
+  @Post('education/create/practice/:id')
+  @ApiOperation({ summary: 'Create payment for practice education' })
+  @ApiBody({ type: CreatePaymentDto })
+  @ApiResponse({ status: 201, description: 'Payment created successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid data' })
+  createCoursePracticePayment(
+    @Param('id') id: string,
+    @User() user?: UserEntity,
+  ) {
+    return this.service.createPracticeInvoice(id, user);
   }
 
   @Public()
   @Post('products/callback')
-  @ApiOperation({ summary: 'Payment provider callback (WayForPay)' })
+  @ApiOperation({
+    summary: 'Payment provider callback (WayForPay) for products',
+  })
   @ApiBody({ type: PaymentCallbackDto })
   @ApiResponse({ status: 200, description: 'Callback processed' })
   async callback(@Body() body: PaymentCallbackDto) {
@@ -55,5 +71,20 @@ export class PaymentsController {
         ? JSON.parse(Object.keys(body)[0])
         : body;
     return this.service.handleProductCallback(payload);
+  }
+
+  @Public()
+  @Post('education/callback')
+  @ApiOperation({
+    summary: 'Payment provider callback (WayForPay) for education',
+  })
+  @ApiBody({ type: PaymentCallbackDto })
+  @ApiResponse({ status: 200, description: 'Callback processed' })
+  async educationCallback(@Body() body: PaymentCallbackDto) {
+    const payload =
+      typeof Object.keys(body)[0] === 'string'
+        ? JSON.parse(Object.keys(body)[0])
+        : body;
+    return this.service.handleEducationCallback(payload);
   }
 }

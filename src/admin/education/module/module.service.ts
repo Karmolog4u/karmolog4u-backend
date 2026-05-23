@@ -182,4 +182,11 @@ export class ModuleService {
       );
     }
   }
+
+  async getPractices(courseId: string) {
+    return await this.moduleModel.countDocuments({
+      type: 'PRACTICAL',
+      course: courseId,
+    });
+  }
 }

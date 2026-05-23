@@ -28,9 +28,9 @@ export class ProductPurchase {
   @Prop({
     required: true,
     type: String,
-    enum: ['Webinar', 'Meditation', 'GuidesAndBooks'],
+    enum: ['Webinars', 'Meditations', 'GuidesAndBooks'],
   })
-  targetModule: 'Webinar' | 'Meditation' | 'GuidesAndBooks';
+  targetModule: 'Webinars' | 'Meditations' | 'GuidesAndBooks';
 }
 
 export const ProductPurchaseSchema =
