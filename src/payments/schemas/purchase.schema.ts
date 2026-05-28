@@ -16,7 +16,19 @@ export enum PaymentType {
   MONTHLY = 'MONTHLY',
 }
 
-@Schema({ timestamps: true })
+@Schema({
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+      // Remove the "_id" property when the object is serialized
+      ret.id = ret._id.toString(); // Add an "id" property with the value of "_id"
+      delete ret._id;
+      return ret;
+    },
+  },
+})
 export class Purchase {
   @Prop({ required: true, unique: true })
   orderReference: string;
@@ -50,9 +62,6 @@ export class Purchase {
 
   @Prop({ enum: PurchaseStatus, default: PurchaseStatus.PENDING })
   status: PurchaseStatus;
-
-  @Prop()
-  transactionStatus: string;
 
   @Prop()
   wayforpayOrderId: string;
