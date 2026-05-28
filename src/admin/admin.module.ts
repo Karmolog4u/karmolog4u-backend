@@ -8,6 +8,7 @@ import { LessonModule } from './education/lessons/lesson.module';
 import { CoursePurchaseModule } from './coursePurchase/coursePurchase.module';
 import { ProductPurchaseModule } from './productPurchase/productPurchase.module';
 import { EventsModule } from './events/events.module';
+import { AdminPaymentModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { EventsModule } from './events/events.module';
     CoursePurchaseModule,
     ProductPurchaseModule,
     EventsModule,
+    AdminPaymentModule,
   ],
   controllers: [],
   providers: [],

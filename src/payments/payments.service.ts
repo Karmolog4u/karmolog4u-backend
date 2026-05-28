@@ -28,8 +28,6 @@ import { CourseService } from 'src/user/education/course.service';
 import { CoursePurchaseService } from 'src/coursePurchase/coursePurchase.service';
 import { UserEntity } from 'src/user/dto/user-entity.dto';
 import { PaymentStatus } from './emun/payment-status.enum';
-import { Observable } from 'rxjs';
-import { v4 as uuid } from 'uuid';
 import {
   advPercentage,
   advTotalPayments,
@@ -159,16 +157,15 @@ export class PaymentsService {
         : `${this.returnUrl}meditations`;
     };
 
-    let purchase: PurchaseDocument;
+    const existingUser = await this.userModel.findOne({ email: dto.email });
+    console.log('user:', existingUser);
+    await this.checkExistingPurchase(dto);
 
     // if user email not equal to dto.email do by email, if user email equal to dto.email do by userId
-    if (user && user.email === dto.email) {
-      // check if user already has an active purchase for this product
-      await this.checkExistingPurchase(dto);
-
+    if (existingUser) {
       //check if user has productPurchase for this product
       const productPurchase = await this.productPurchaseModel.findOne({
-        userId: user._id,
+        userId: existingUser._id,
         productId: product._id,
       });
       if (productPurchase) {
@@ -176,41 +173,21 @@ export class PaymentsService {
           'Ви вже придбали цей товар. Будь ласка, перевірте свої покупки.',
         );
       }
-
-      purchase = await this.purchaseModel.create({
-        orderReference,
-        productName: product.name.uk,
-        productId: product._id,
-        productPrice: product.price,
-        productType: productType,
-        paymentType: PaymentType.FULL,
-        currency: this.currency,
-        userId: user._id,
-        clientEmail: user.email,
-        clientPhone: user.phone,
-        amount,
-      });
-    } else {
-      // guest purchase - we won't link it to a user account, but we can still store email and phone for contact
-
-      // check if user has account with this email
-      await this.checkExistingUser(dto);
-      // check if user already has an active purchase for this product
-      await this.checkExistingPurchase(dto);
-
-      purchase = await this.purchaseModel.create({
-        orderReference,
-        productName: product.name.uk,
-        productId: product._id,
-        productPrice: product.price,
-        productType: productType,
-        paymentType: PaymentType.FULL,
-        amount,
-        currency: this.currency,
-        clientEmail: dto.email,
-        clientPhone: dto.phone,
-      });
     }
+
+    const purchase: PurchaseDocument = await this.purchaseModel.create({
+      orderReference,
+      productName: product.name.uk,
+      productId: product._id,
+      productPrice: product.price,
+      productType: productType,
+      paymentType: PaymentType.FULL,
+      currency: this.currency,
+      userId: existingUser?._id ?? null,
+      clientEmail: dto.email,
+      clientPhone: dto.phone,
+      amount,
+    });
 
     const orderDate = Math.floor(now / 1000);
 
@@ -268,7 +245,6 @@ export class PaymentsService {
       throw new BadRequestException('Invalid signature');
     }
 
-    purchase.transactionStatus = data.transactionStatus;
     purchase.rawResponse = data;
 
     switch (data.transactionStatus) {
@@ -395,7 +371,6 @@ export class PaymentsService {
     }
 
     const previousStatus = purchase.status;
-    purchase.transactionStatus = transactionStatus;
     purchase.rawResponse = data;
 
     switch (transactionStatus) {
@@ -588,36 +563,24 @@ export class PaymentsService {
       .digest('hex');
   }
 
-  private async checkExistingUser(dto: any) {
-    const existingUser = await this.userModel.findOne({ email: dto.email });
-    if (existingUser) {
-      throw new BadRequestException(
-        'Обліковий запис із цією електронною адресою вже існує. Будь ласка, увійдіть, щоб придбати цей товар.',
-      );
-    }
-  }
-
   private async checkExistingPurchase(dto: any) {
     const existingPurchase = await this.purchaseModel.findOne({
       clientEmail: dto.email,
       productId: dto.itemId,
     });
 
-    if (existingPurchase) {
-      switch (existingPurchase.status) {
-        case PurchaseStatus.PENDING:
-          throw new BadRequestException(
-            'Для цієї електронної адреси та продукту вже є покупка, що очікує на розгляд. Будь ласка, завершіть її, перш ніж створювати нову.',
-          );
-        case PurchaseStatus.APPROVED:
-          throw new BadRequestException(
-            'Ви вже придбали цей товар, використовуючи цю електронну адресу. Будь ласка, перевірте свої покупки.',
-          );
-        default:
-          throw new InternalServerErrorException(
-            'Щось пішло не так, зверніться до адміністратора',
-          );
-      }
+    if (!existingPurchase) {
+      return;
+    }
+    if (existingPurchase.status === PurchaseStatus.PENDING) {
+      throw new BadRequestException(
+        'Для цієї електронної адреси та продукту вже є покупка, що очікує на розгляд. Будь ласка, завершіть її, перш ніж створювати нову.',
+      );
+    }
+    if (existingPurchase.status === PurchaseStatus.APPROVED) {
+      throw new BadRequestException(
+        'Ви вже придбали цей товар, використовуючи цю електронну адресу. Будь ласка, перевірте свої покупки.',
+      );
     }
   }
 

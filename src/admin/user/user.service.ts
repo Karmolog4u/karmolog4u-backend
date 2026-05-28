@@ -77,16 +77,27 @@ export class UserService {
           {
             $match: matchStage,
           },
+
+          {
+            $lookup: {
+              from: 'coursepurchases',
+              localField: '_id',
+              foreignField: 'userId',
+              as: 'coursePurchases',
+            },
+          },
+
+          {
+            $lookup: {
+              from: 'courses',
+              localField: 'coursePurchases.courseId',
+              foreignField: '_id',
+              as: 'courses',
+            },
+          },
+
           ...(course_id
             ? [
-                {
-                  $lookup: {
-                    from: 'coursepurchases',
-                    localField: '_id',
-                    foreignField: 'userId',
-                    as: 'coursePurchases',
-                  },
-                },
                 {
                   $match: {
                     'coursePurchases.courseId': new Types.ObjectId(course_id),
@@ -94,11 +105,13 @@ export class UserService {
                 },
               ]
             : []),
+
           {
             $sort: {
               [sortField]: sortOrder === -1 ? -1 : 1,
             },
           },
+
           {
             $project: {
               id: '$_id',
@@ -111,19 +124,35 @@ export class UserService {
               lastLogin: 1,
               createdAt: 1,
               toDelete: 1,
+
+              courses: {
+                $map: {
+                  input: '$courses',
+                  as: 'course',
+                  in: {
+                    id: '$$course._id',
+                    name: '$$course.name',
+                  },
+                },
+              },
+
               _id: 0,
             },
           },
+
           {
             $facet: {
               data: [{ $skip: skip }, { $limit: limit }],
               total: [{ $count: 'count' }],
             },
           },
+
           {
             $project: {
               data: 1,
-              total: { $ifNull: [{ $arrayElemAt: ['$total.count', 0] }, 0] },
+              total: {
+                $ifNull: [{ $arrayElemAt: ['$total.count', 0] }, 0],
+              },
             },
           },
         ])
