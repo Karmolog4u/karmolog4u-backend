@@ -192,7 +192,6 @@ export class CourseService {
         select: 'savedName originalName', // вибір полів
       })
       .exec();
-
     if (!lesson) throw new NotFoundException('Уроків не знайдено');
 
     // 2. Check lesson.access.type = TO_DATE
@@ -207,30 +206,34 @@ export class CourseService {
         }
       }
       // ---- TARGET: MODULE ----
-      const module = await this.moduleModel.findById(lesson.targetId).lean();
-      if (!module) throw new NotFoundException('Модуль не знайдено');
+      const moduleInfo = await this.moduleModel
+        .findById(lesson.targetId)
+        .lean();
+
+      if (!moduleInfo) throw new NotFoundException('Модуль не знайдено');
 
       if (
-        now < module.access.dateStart.getTime() ||
-        now > module.access.dateEnd.getTime()
+        now < moduleInfo.access.dateStart.getTime() ||
+        now > moduleInfo.access.dateEnd.getTime()
       ) {
         throw new ForbiddenException('Модуль не доступний за датою');
       }
 
       const purchase = await this.coursePurchaseModel.findOne({
         userId,
-        courseId: module.course,
+        courseId: moduleInfo.course,
       });
 
       if (!purchase) throw new ForbiddenException('Покупки не знайдено');
 
-      if (
-        !(now > purchase.accessStartDate.getTime()) ||
-        !(now < purchase.availableTo.getTime())
-      ) {
+      const startOk = now > purchase.accessStartDate.getTime();
+
+      const endOk =
+        purchase.availableTo === null || now < purchase.availableTo.getTime();
+
+      if (!startOk || !endOk) {
         throw new ForbiddenException('Курс ще не розпочався або закінчився');
       }
-
       return lesson; // ✅ доступ є
     }
 

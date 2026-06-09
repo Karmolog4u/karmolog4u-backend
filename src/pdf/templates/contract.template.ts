@@ -183,7 +183,7 @@ export function contractTemplate(data: {
     <p class="user-data">Телефон: <span class="user-data-span">${
       data.phone
     }</span></p>
-    </div
+    </div>
 </div>
 
 </body>

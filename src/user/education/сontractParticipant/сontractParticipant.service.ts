@@ -98,7 +98,7 @@ export class ContractParticipantService {
       signDate: new Date().toLocaleDateString('uk-UA'),
     };
     try {
-      const adminMail = await this.mailService.sendEmail(
+      await this.mailService.sendEmail(
         this.configService.get('ADMIN_EMAIL'),
         'New Contract Signed',
         'contract',
@@ -118,7 +118,7 @@ export class ContractParticipantService {
       );
     }
     try {
-      const userMail = await this.mailService.sendEmail(
+      await this.mailService.sendEmail(
         user.email,
         'Contract Signed Successfully',
         'contract-signed-user',
