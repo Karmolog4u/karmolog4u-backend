@@ -271,16 +271,7 @@ export class ContractParticipantController {
   })
   async getContractInfo(@User() user: UserEntity, @Param() param: IdParams) {
     try {
-      const result = await this.contractService.getContractDetails(
-        user,
-        param.id,
-      );
-
-      return {
-        statusCode: HttpStatus.OK,
-        message: 'Contract information retrieved successfully',
-        data: result,
-      };
+      return await this.contractService.getContractDetails(user, param.id);
     } catch (error) {
       throw new HttpException(
         {

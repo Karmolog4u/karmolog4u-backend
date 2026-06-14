@@ -189,16 +189,10 @@ export class ContractParticipantService {
       throw new BadRequestException('Курс не знайдено в покупках');
     }
 
-    if (!purchase.agreement) {
-      return {
-        agreement: false,
-        message: 'Контракт не підписаний',
-      };
-    }
-
     const contract = await this.contractModel.findOne({
       course: courseId,
     });
+
     if (!contract) {
       throw new NotFoundException('Контракт не знайдено');
     }
@@ -208,35 +202,49 @@ export class ContractParticipantService {
       courseId: courseId,
       contractId: contract._id,
     });
-    if (!contractParticipant) {
-      throw new NotFoundException('Дані учасника контракту не знайдено');
-    }
 
     const course = await this.courseModel
       .findById(courseId)
       .select('name')
       .lean();
+
     if (!course) {
       throw new NotFoundException('Курс не знайдено');
+    }
+    console.log(contractParticipant);
+
+    const contractDetails = {
+      contractId: contract._id,
+      courseId: courseId,
+      courseName: course.name,
+      userId: user._id,
+      fullname: `${user.name} ${user.lastName}`,
+      email: user.email,
+      ...(contractParticipant
+        ? {
+            phone: contractParticipant.phone,
+            idCode: contractParticipant.idCode,
+            passportData: contractParticipant.passportData,
+            messenger: contractParticipant.messenger,
+          }
+        : {}),
+      contractDate: contract.date,
+      signUpTo: contract.signUpTo,
+      header: contract.header,
+      points: contract.points,
+    };
+    console.log(contractDetails);
+
+    if (!purchase.agreement) {
+      return {
+        agreement: false,
+        contractDetails,
+      };
     }
 
     return {
       agreement: true,
-      contractDetails: {
-        contractId: contract._id,
-        courseId: courseId,
-        courseName: course.name,
-        userId: user._id,
-        fullname: `${user.name} ${user.lastName}`,
-        email: user.email,
-        phone: contractParticipant.phone,
-        idCode: contractParticipant.idCode,
-        passportData: contractParticipant.passportData,
-        contractDate: contract.date,
-        header: contract.header,
-        points: contract.points,
-        messenger: contractParticipant.messenger,
-      },
+      contractDetails,
     };
   }
 }
