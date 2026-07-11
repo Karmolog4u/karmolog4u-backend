@@ -106,7 +106,7 @@ export class CoursePurchaseService {
   }
 
   async getAchievement(userId: Types.ObjectId) {
-    const achievements = await this.coursePurchaseModel.aggregate([
+    return this.coursePurchaseModel.aggregate([
       {
         $match: {
           userId: new Types.ObjectId(userId),
@@ -119,25 +119,31 @@ export class CoursePurchaseService {
           localField: 'courseId',
           foreignField: '_id',
           as: 'course',
-          pipeline: [
-            {
-              $project: {
-                _id: 1,
-                cover: 1,
-                name: '$name.uk',
-                numberOfLessons: {
-                  $size: { $ifNull: ['$lessons', []] }, // 👈 fallback якщо lessons = null/нема
-                },
-              },
-            },
-          ],
         },
       },
-      { $unwind: '$course' },
-      { $replaceRoot: { newRoot: '$course' } },
+      {
+        $unwind: '$course',
+      },
+      {
+        $lookup: {
+          from: 'lessons',
+          localField: 'courseId',
+          foreignField: 'targetId',
+          as: 'lessons',
+        },
+      },
+      {
+        $project: {
+          _id: '$course._id',
+          cover: '$course.cover',
+          name: '$course.name',
+          type: '$course.type',
+          numberOfLessons: {
+            $size: '$lessons',
+          },
+        },
+      },
     ]);
-
-    return achievements;
   }
 
   async getAllCourse(userId: Types.ObjectId) {
