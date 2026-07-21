@@ -77,7 +77,7 @@ export class GuidesAndBooksService {
       ])
       .exec();
     if (guidesAndBooks.length == 0) {
-      throw new NotFoundException('Guides and books not found');
+      return [];
     }
     return guidesAndBooks;
   }
