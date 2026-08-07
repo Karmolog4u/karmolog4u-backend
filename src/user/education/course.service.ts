@@ -346,8 +346,10 @@ export class CourseService {
     const userName = trimAnyEmailDomain(user.email);
     const fileName = `${userName}_${courseTypeShort}.pdf`;
 
+
     const file = await this.driveService.downloadFile(fileName);
     // console.log(`Certificate file for ${fileName}:`, file);
+    console.log('file', file);
 
     const certificateFileName = `certificate_${fileName}`;
 
@@ -359,19 +361,6 @@ export class CourseService {
 
   async getCourseData(courseId: any) {
     const course = await this.courseModel.findById(courseId);
-    // const optionalFiles = await this.filesModel
-    //   .find(
-    //     {
-    //       targetId: courseId,
-    //       targetModel: 'Course',
-    //     },
-    //     {
-    //       originalName: 1,
-    //       savedName: 1,
-    //       _id: 0, // якщо не потрібно _id
-    //     },
-    //   )
-    //   .lean({ virtuals: false });
 
     if (!course) {
       throw new NotFoundException('Курс не знайдено');

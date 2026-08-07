@@ -39,11 +39,15 @@ export class DriveService {
           and '${this.folderId}' in parents
           and trashed=false
         `;
+
+    console.log('query', query);
+
     const res = await this.drive.files.list({
       q: query,
       fields: 'files(id, name, mimeType, size)',
       //   spaces: 'drive',
     });
+    console.log('res', res);
 
     return res.data.files?.[0] || null;
   }

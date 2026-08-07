@@ -163,22 +163,24 @@ export class CoursePurchaseService {
       const userObjectId = new Types.ObjectId(userId);
       const coursePurchases = await this.coursePurchaseModel
         .find({ userId: userObjectId })
-        .populate({
-          path: 'courseId', // поле, що зберігає ID курсу
-          select: 'name type', // повертаємо тільки назву курсу
-        })
         .select(
-          'courseId status completed accessEndDate accessType paymentPlan availableTo',
-        ) // потрібні поля
+          'courseId status completed accessEndDate accessType paymentPlan availableTo price',
+        )
+        .populate({
+          path: 'courseId',
+          select: '_id name type',
+        })
         .lean()
         .exec();
 
       // Мапимо результат, щоб courseId містив і id і name
-      return coursePurchases.map((purchase) => ({
+
+
+      const info = coursePurchases.map((purchase) => ({
         course: {
-          id: (purchase.courseId as any)._id,
-          name: (purchase.courseId as any).name,
-          type: (purchase.courseId as any).type,
+          id: purchase.courseId?._id,
+          name: (purchase.courseId as any)?.name,
+          type: (purchase.courseId as any)?.type,
         },
         status: purchase.status,
         completed: purchase.completed,
@@ -189,6 +191,8 @@ export class CoursePurchaseService {
         availableTo: purchase.availableTo,
         price: purchase.price,
       }));
+
+      return info;
     } catch (error) {
       throw new BadRequestException('Не вдалося отримати покупки користувача');
     }
