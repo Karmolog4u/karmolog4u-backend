@@ -36,40 +36,11 @@ export const multerOptionsFiles = (): MulterOptions => ({
       const ext = path.extname(originalName);
       // const nameWithoutExt = path.basename(originalName, ext);
       const filename = `${Date.now()}_${uuidv4()}${Date.now()}${ext}`;
-      const filePath = path.join(process.cwd(), 'temporaryFiles', filename);
-      // console.log('filePath', filePath);
-
-      // let copyIndex = 1;
-
-      // // Перевіряємо, чи файл вже існує та додаємо префікс (copy_X)
-      // while (await fileExists(filePath)) {
-      //   filename = `${nameWithoutExt}(copy_${copyIndex})${ext}`;
-      //   filePath = path.join(process.cwd(), 'temporaryFiles', filename); // Оновлюємо шлях
-      //   copyIndex++;
-      // }
 
       callback(null, filename);
     },
   }),
   limits: { files: 10, fileSize: 100 * 1024 * 1024 }, // Limit: Max 10 files, 10MB each
-  // fileFilter: (req, file, callback) => {
-  //   const allowedMimeTypes = [
-  //     'image/jpeg',
-  //     'image/png',
-  //     'image/webp',
-  //     'application/pdf',
-  //     'application/vnd.ms-excel',
-  //     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  //     'application/vnd.ms-powerpoint',
-  //     'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  //   ];
-
-  //   if (allowedMimeTypes.includes(file.mimetype)) {
-  //     callback(null, true); // ✅ Accept file
-  //   } else {
-  //     callback(new Error('Only image files are allowedjjjjjj!'), false); // Відхиляємо файли
-  //   }
-  // },
 });
 
 // Функція перевірки існування файлу
@@ -82,6 +53,12 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
-function normalizeFilename(filename: string): string {
-  return filename.normalize('NFC'); // Нормалізація юнікоду
+export function normalizeFilename(filename: string): string {
+  const decodedFilename = decodeFilename(filename);
+
+  return decodedFilename.normalize('NFC'); // Нормалізація юнікоду
+}
+
+function decodeFilename(filename: string): string {
+  return Buffer.from(filename, 'latin1').toString('utf8');
 }

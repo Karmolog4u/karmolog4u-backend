@@ -237,7 +237,7 @@ export class AdminWebinarsService {
             id: '$_id',
             name: '$name.uk',
             targetModule: {
-              $literal: 'Webinar',
+              $literal: 'Webinars',
             },
             _id: 0,
           },

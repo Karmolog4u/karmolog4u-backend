@@ -31,6 +31,7 @@ import { UploadFilesDto } from './dto/upload-files.dto';
 import {
   multerOptions,
   multerOptionsFiles,
+  normalizeFilename,
 } from 'src/common/helper/multerOptions';
 import { TemporaryImageParamsDto } from './dto/temporary-image-params.dto';
 import { TemporaryFileParamsDto } from './dto/temporary-file-params.dto';
@@ -124,13 +125,10 @@ export class StorageController {
     @UploadedFiles()
     files: Express.Multer.File[],
   ) {
-    // console.log(files);
-
     try {
-      // const envValue = this.configService.get<string>('SERVER_IP');
       return {
         uploaded: files.map((f) => ({
-          originalName: f.originalname,
+          originalName: normalizeFilename(f.originalname),
           savedName: f.filename,
           path: `${f.path}`,
         })),

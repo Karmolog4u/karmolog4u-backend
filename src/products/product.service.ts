@@ -50,6 +50,7 @@ export class ProductService {
           $match: {
             price: { $exists: true, $gt: 0 },
             status: 'PUBLISHED',
+            toDelete: false,
           },
         },
         // 2. Підтягнути покупки користувача
@@ -98,6 +99,7 @@ export class ProductService {
           $match: {
             price: { $exists: true, $gt: 0 },
             status: 'PUBLISHED',
+            toDelete: false,
           },
         },
         // 2. Підтягнути покупки користувача
@@ -145,6 +147,7 @@ export class ProductService {
           $match: {
             price: { $exists: true, $gt: 0 },
             status: 'PUBLISHED',
+            toDelete: false,
           },
         },
         // 2. Підтягнути покупки користувача
