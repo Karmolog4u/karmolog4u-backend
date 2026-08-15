@@ -242,7 +242,7 @@ export class AdminMeditationService {
             id: '$_id',
             name: '$name.uk',
             targetModule: {
-              $literal: 'Meditation',
+              $literal: 'Meditations',
             },
             _id: 0,
           },

@@ -150,6 +150,7 @@ export class MeditationService {
             name: 1,
             price: 1,
             cover: 1,
+            description: 1,
             isWaiting: 1,
             video: {
               $cond: {

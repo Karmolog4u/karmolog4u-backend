@@ -40,6 +40,7 @@ export class MeditationController {
       const meditation = await this.meditationService.findMeditationById(
         meditationId,
       );
+
       return meditation;
     } catch (error) {
       throw new NotFoundException('Meditation not found');
