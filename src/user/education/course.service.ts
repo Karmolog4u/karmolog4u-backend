@@ -194,80 +194,329 @@ export class CourseService {
       .exec();
     if (!lesson) throw new NotFoundException('Уроків не знайдено');
 
-    // 2. Check lesson.access.type = TO_DATE
+    /*
+     * =========================================================
+     * TARGET: COURSE
+     * =========================================================
+     */
 
-    if (lesson.targetModel === 'Module') {
-      if (lesson?.access?.type === 'TO_DATE') {
-        if (
-          now < lesson?.access.dateStart.getTime() ||
-          now > lesson?.access.dateEnd.getTime()
-        ) {
-          throw new ForbiddenException('Урок не доступний за датою');
-        }
-      }
-      // ---- TARGET: MODULE ----
-      const moduleInfo = await this.moduleModel
-        .findById(lesson.targetId)
-        .lean();
-
-      if (!moduleInfo) throw new NotFoundException('Модуль не знайдено');
-
-      if (
-        now < moduleInfo.access.dateStart.getTime() ||
-        now > moduleInfo.access.dateEnd.getTime()
-      ) {
-        throw new ForbiddenException('Модуль не доступний за датою');
-      }
-
-      const purchase = await this.coursePurchaseModel.findOne({
-        userId,
-        courseId: moduleInfo.course,
-      });
-
-      if (!purchase) throw new ForbiddenException('Покупки не знайдено');
-
-      const startOk = now > purchase.accessStartDate.getTime();
-
-      const endOk =
-        purchase.availableTo === null || now < purchase.availableTo.getTime();
-
-      if (!startOk || !endOk) {
-        throw new ForbiddenException('Курс ще не розпочався або закінчився');
-      }
-      return lesson; // ✅ доступ є
-    }
-
-    // 3. Check by targetModel
     if (lesson.targetModel === 'Course') {
-      // ---- TARGET: COURSE ----
-      const course = await this.courseModel.findById(lesson.targetId);
+      const course = await this.courseModel.findById(lesson.targetId).lean();
+
       if (!course) {
         throw new NotFoundException('Курс не знайдено');
       }
+
+      // Find purchase
       const purchase = await this.coursePurchaseModel.findOne({
         userId,
         courseId: course._id,
       });
 
-      if (!purchase) throw new NotFoundException('Покупки не знайдено');
-
-      if (
-        now < purchase.accessStartDate.getTime() ||
-        now > purchase.availableTo.getTime()
-      ) {
-        throw new ForbiddenException('Курс ще не розпочався або закінчився');
+      if (!purchase) {
+        throw new ForbiddenException('Покупки не знайдено');
       }
 
-      if (purchase.paymentPlan === 'PARTIAL') {
-        if (purchase.lessonsUnlocked?.some((id) => id.equals(lesson._id))) {
+      /*
+       * ---------------------------------------------------------
+       * Course access
+       * ---------------------------------------------------------
+       *
+       * accessStartDate <= now <= availableTo
+       */
+      if (now < purchase.accessStartDate.getTime()) {
+        throw new ForbiddenException('Курс ще не розпочався');
+      }
+
+      if (purchase.availableTo && now > purchase.availableTo.getTime()) {
+        throw new ForbiddenException('Доступ до курсу закінчився');
+      }
+
+      /*
+       * ---------------------------------------------------------
+       * SSK + PARTIAL
+       * ---------------------------------------------------------
+       *
+       * Для SSK:
+       *
+       * FULL    -> доступ до всіх уроків
+       * PARTIAL -> доступ тільки до lessonsUnlocked
+       */
+      const isSsk = [
+        'SSK_INDEPENDENT',
+        'SSK_WITH_CURATOR',
+        'SSK_WITH_SERGIY',
+      ].includes(course.type);
+
+      if (isSsk && purchase.paymentPlan === 'PARTIAL') {
+        const lessonUnlocked = purchase.lessonsUnlocked?.some((id) =>
+          id.equals(lesson._id),
+        );
+        if (!lessonUnlocked) {
           throw new ForbiddenException('Урок заблокований по частковій оплаті');
         }
       }
 
-      return lesson; // ✅ доступ є
+      /*
+       * ---------------------------------------------------------
+       * Lesson access
+       * ---------------------------------------------------------
+       *
+       * Перевіряємо власний access уроку.
+       */
+      if (lesson.access?.type === 'TO_DATE') {
+        const lessonStart = lesson.access.dateStart.getTime();
+
+        const lessonEnd = lesson.access.dateEnd.getTime();
+
+        if (now < lessonStart || now > lessonEnd) {
+          throw new ForbiddenException('Урок не доступний за датою');
+        }
+      }
+
+      return lesson;
     }
 
+    /*
+     * =========================================================
+     * TARGET MODEL: MODULE
+     * =========================================================
+     *
+     * Використовується для ADVANCED / CONSULTING.
+     *
+     * Логіка:
+     *
+     * 1. Знаходимо Module
+     * 2. Знаходимо purchase через module.course
+     * 3. Перевіряємо доступ до курсу
+     * 4. Перевіряємо доступ до Module
+     * 5. Перевіряємо lessonTimeStart - 1 година
+     */
+    if (lesson.targetModel === 'Module') {
+      /*
+       * -------------------------------------------------------
+       * Find module
+       * -------------------------------------------------------
+       */
+      const moduleInfo = await this.moduleModel
+        .findById(lesson.targetId)
+        .lean();
+
+      if (!moduleInfo) {
+        throw new NotFoundException('Модуль не знайдено');
+      }
+
+      /*
+       * -------------------------------------------------------
+       * Find purchase
+       * -------------------------------------------------------
+       */
+      const purchase = await this.coursePurchaseModel.findOne({
+        userId,
+        courseId: moduleInfo.course,
+      });
+
+      if (!purchase) {
+        throw new ForbiddenException('Покупки не знайдено');
+      }
+
+      /*
+       * -------------------------------------------------------
+       * Course access
+       * -------------------------------------------------------
+       */
+      if (
+        purchase.accessStartDate &&
+        purchase.accessStartDate.getTime() > now
+      ) {
+        throw new ForbiddenException('Курс ще не розпочався');
+      }
+
+      if (purchase.availableTo && purchase.availableTo.getTime() < now) {
+        throw new ForbiddenException('Доступ до курсу закінчився');
+      }
+
+      /*
+       * -------------------------------------------------------
+       * Module access
+       * -------------------------------------------------------
+       */
+      if (!moduleInfo.access?.dateStart || !moduleInfo.access?.dateEnd) {
+        throw new ForbiddenException('Для модуля не вказано період доступу');
+      }
+
+      const moduleStart = moduleInfo.access.dateStart.getTime();
+
+      const moduleEnd = moduleInfo.access.dateEnd.getTime();
+
+      if (now < moduleStart || now > moduleEnd) {
+        throw new ForbiddenException('Модуль не доступний за датою');
+      }
+
+      /*
+       * -------------------------------------------------------
+       * PRACTICAL MODULE ACCESS
+       * -------------------------------------------------------
+       *
+       * Для практичних модулів перевіряємо,
+       * скільки практик придбав користувач.
+       *
+       * Наприклад:
+       *
+       * numberOfPractices = 2
+       *
+       * Практика №1 -> доступ
+       * Практика №2 -> доступ
+       * Практика №3 -> заборонена
+       */
+      if (moduleInfo.type === 'PRACTICAL') {
+        const practicalModules = await this.moduleModel
+          .find({
+            course: moduleInfo.course,
+            type: 'PRACTICAL',
+          })
+          .sort({
+            'access.dateStart': 1,
+          })
+          .select('_id access')
+          .lean();
+
+        const practicalModuleIndex = practicalModules.findIndex((module) =>
+          module._id.equals(moduleInfo._id),
+        );
+
+        /*
+         * Теоретично цього не повинно статися,
+         * оскільки moduleInfo вже знайдений,
+         * але краще явно перевірити.
+         */
+        if (practicalModuleIndex === -1) {
+          throw new ForbiddenException(
+            'Практичний модуль не знайдено серед модулів курсу',
+          );
+        }
+
+        /*
+         * Масив має індекс 0,
+         * а номер практики починається з 1.
+         */
+        const practiceNumber = practicalModuleIndex + 1;
+
+        const numberOfPractices = purchase.numberOfPractices ?? 0;
+
+        if (numberOfPractices < practiceNumber) {
+          throw new ForbiddenException(
+            'Користувач не має доступу до цієї практики',
+          );
+        }
+      }
+
+      /*
+       * -------------------------------------------------------
+       * Lesson time access
+       * -------------------------------------------------------
+       *
+       * Урок стає доступним за 1 годину
+       * до lessonTimeStart.
+       */
+      if (!lesson.lessonTimeStart) {
+        throw new ForbiddenException('Для уроку не вказано час початку');
+      }
+
+      const lessonAvailableFrom =
+        lesson.lessonTimeStart.getTime() - 60 * 60 * 1000;
+
+      if (now < lessonAvailableFrom) {
+        throw new ForbiddenException('Урок ще не доступний');
+      }
+
+      /*
+       * -------------------------------------------------------
+       * Access granted
+       * -------------------------------------------------------
+       */
+      return lesson;
+    }
+
+    /*
+     * =========================================================
+     * Unknown target model
+     * =========================================================
+     */
     throw new ForbiddenException('Урок має невірно вказане джерело');
+
+    // if (lesson.targetModel === 'Module') {
+    //   if (lesson?.access?.type === 'TO_DATE') {
+    //     if (
+    //       now < lesson?.access.dateStart.getTime() ||
+    //       now > lesson?.access.dateEnd.getTime()
+    //     ) {
+    //       throw new ForbiddenException('Урок не доступний за датою');
+    //     }
+    //   }
+    //   // ---- TARGET: MODULE ----
+    //   const moduleInfo = await this.moduleModel
+    //     .findById(lesson.targetId)
+    //     .lean();
+
+    //   if (!moduleInfo) throw new NotFoundException('Модуль не знайдено');
+
+    //   if (
+    //     now < moduleInfo.access.dateStart.getTime() ||
+    //     now > moduleInfo.access.dateEnd.getTime()
+    //   ) {
+    //     throw new ForbiddenException('Модуль не доступний за датою');
+    //   }
+
+    //   const purchase = await this.coursePurchaseModel.findOne({
+    //     userId,
+    //     courseId: moduleInfo.course,
+    //   });
+
+    //   if (!purchase) throw new ForbiddenException('Покупки не знайдено');
+
+    //   const startOk = now > purchase.accessStartDate.getTime();
+
+    //   const endOk =
+    //     purchase.availableTo === null || now < purchase.availableTo.getTime();
+
+    //   if (!startOk || !endOk) {
+    //     throw new ForbiddenException('Курс ще не розпочався або закінчився');
+    //   }
+    //   return lesson; // ✅ доступ є
+    // }
+
+    // // 3. Check by targetModel
+    // if (lesson.targetModel === 'Course') {
+    //   // ---- TARGET: COURSE ----
+    //   const course = await this.courseModel.findById(lesson.targetId);
+    //   if (!course) {
+    //     throw new NotFoundException('Курс не знайдено');
+    //   }
+    //   const purchase = await this.coursePurchaseModel.findOne({
+    //     userId,
+    //     courseId: course._id,
+    //   });
+
+    //   if (!purchase) throw new NotFoundException('Покупки не знайдено');
+
+    //   if (
+    //     now < purchase.accessStartDate.getTime() ||
+    //     now > purchase.availableTo.getTime()
+    //   ) {
+    //     throw new ForbiddenException('Курс ще не розпочався або закінчився');
+    //   }
+
+    //   if (purchase.paymentPlan === 'PARTIAL') {
+    //     if (purchase.lessonsUnlocked?.some((id) => id.equals(lesson._id))) {
+    //       throw new ForbiddenException('Урок заблокований по частковій оплаті');
+    //     }
+    //   }
+
+    //   return lesson; // ✅ доступ є
+    // }
+
+    // throw new ForbiddenException('Урок має невірно вказане джерело');
   }
 
   async sendFeedback(user: any, id: any, data: any) {
@@ -345,7 +594,6 @@ export class CourseService {
     const courseTypeShort = getCourseTypeShortName(course.type);
     const userName = trimAnyEmailDomain(user.email);
     const fileName = `${userName}_${courseTypeShort}.pdf`;
-
 
     const file = await this.driveService.downloadFile(fileName);
     // console.log(`Certificate file for ${fileName}:`, file);

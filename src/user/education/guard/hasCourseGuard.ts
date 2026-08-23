@@ -16,8 +16,8 @@ export class HasCourseGuard implements CanActivate {
     const user = request.user; // from AuthGuard (JWT)
     const courseId = request.params.id; // URL param
 
-    if (!user) throw new ForbiddenException('User not authenticated');
-    if (!courseId) throw new ForbiddenException('Course ID is missing');
+    if (!user) throw new ForbiddenException('Зайдіть заново в аккаунт');
+    if (!courseId) throw new ForbiddenException('Курс не знайдено');
 
     // Check if user has this course
     const hasCourse = await this.coursePurchase.userHasCourse(
@@ -26,7 +26,7 @@ export class HasCourseGuard implements CanActivate {
     );
 
     if (!hasCourse) {
-      throw new ForbiddenException('No access to this course');
+      throw new ForbiddenException('Немає доступу до цього курсу');
     }
 
     return true; // Authorized

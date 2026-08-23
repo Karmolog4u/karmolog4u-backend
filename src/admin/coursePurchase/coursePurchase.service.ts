@@ -2,6 +2,7 @@ import {
   BadRequestException,
   HttpException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -38,77 +39,65 @@ export class CoursePurchaseService {
     courseId: string,
     paymentPlan: 'FULL' | 'PARTIAL' | 'INSTALLMENT',
   ) {
-    const ssk = ['SSK_INDEPENDENT', 'SSK_WITH_CURATOR', 'SSK_WITH_SERGIY'];
+    const sskTypes = ['SSK_INDEPENDENT', 'SSK_WITH_CURATOR', 'SSK_WITH_SERGIY'];
+
+    const advancedTypes = ['ADVANCED', 'CONSULTING'];
     try {
-      const purchase = await this.coursePurchaseModel.findOne({
-        userId: new Types.ObjectId(userId),
-        courseId: new Types.ObjectId(courseId),
+      const userObjectId = new Types.ObjectId(userId);
+      const courseObjectId = new Types.ObjectId(courseId);
+
+      const existingPurchase = await this.coursePurchaseModel.findOne({
+        userId: userObjectId,
+        courseId: courseObjectId,
       });
-      if (purchase) {
-        throw new BadRequestException('користувач має таку покупку!');
+      if (existingPurchase) {
+        throw new BadRequestException('Користувач має таку покупку!');
       }
 
-      const userObjectId = new Types.ObjectId(userId);
-
-      //get course from db
-      const course = await this.courseModel.findById(courseId);
+      const course = await this.courseModel.findById(courseObjectId);
       if (!course) {
         throw new NotFoundException('Курс не знайдено');
       }
 
       // create obj data to record
-      const Data: Record<string, any> = {
+      const data: Record<string, any> = {
         userId: userObjectId,
-        courseId: courseId,
+        courseId: courseObjectId,
         status: 'ACTIVE',
         paymentPlan,
         price: course.price,
+        accessType: course.access.type,
       };
 
-      Data.accessType = course.access.type;
-      if (Data.accessType === 'FOR_PERIOD') {
-        Data.accessStartDate = new Date().toISOString();
-        const dateNowPlusMonths = new Date();
-        dateNowPlusMonths.setMonth(
-          dateNowPlusMonths.getMonth() + +course.access.months,
-        );
-        Data.accessEndDate = dateNowPlusMonths;
+      // Визначаємо accessStartDate та accessEndDate
+      if (course.access.type === 'TO_DATE') {
+        data.accessStartDate = course.access.dateStart;
+        data.accessEndDate = course.access.dateEnd;
+      } else {
+        const accessStartDate = new Date();
+
+        data.accessStartDate = accessStartDate;
+
+        const accessEndDate = new Date(accessStartDate);
+
+        if (course.access.type === 'PERMANENT') {
+          accessEndDate.setFullYear(accessEndDate.getFullYear() + 100);
+        }
+
+        if (course.access.type === 'FOR_PERIOD') {
+          accessEndDate.setMonth(
+            accessEndDate.getMonth() + course.access.months,
+          );
+        }
+
+        data.accessEndDate = accessEndDate;
       }
 
-      if (Data.accessType === 'TO_DATE') {
-        Data.accessStartDate = course.access.dateStart;
-        Data.accessEndDate = course.access.dateEnd;
-      }
+      // За замовчуванням availableTo = accessStartDate
+      data.availableTo = data.accessEndDate;
 
-      if (Data.accessType === 'PERMANENT') {
-        const Now = Date.now();
-        const plus100Years = new Date(Now);
-        plus100Years.setFullYear(plus100Years.getFullYear() + 100);
-        Data.accessStartDate = Now;
-        Data.accessEndDate = plus100Years;
-        Data.availableTo = plus100Years;
-      }
-
-      if (ssk.includes(course.type)) {
-        Data.availableTo = Data.accessEndDate;
-      }
-
-      if (
-        (course.type === 'CONSULTING' || course.type === 'ADVANCED') &&
-        Data.paymentPlan === 'FULL'
-      ) {
-        Data.availableTo = course.access.dateEnd;
-      }
-      if (
-        (course.type === 'CONSULTING' || course.type === 'ADVANCED') &&
-        Data.paymentPlan === 'INSTALLMENT'
-      ) {
-        const dateNowPlusMonths = new Date();
-        dateNowPlusMonths.setMonth(dateNowPlusMonths.getMonth() + 1);
-        Data.availableTo = dateNowPlusMonths;
-      }
-
-      if (ssk.includes[course.type]) {
+      // SSK
+      if (sskTypes.includes(course.type)) {
         const lessons = await this.lessonModel
           .find({
             targetId: course._id,
@@ -117,35 +106,42 @@ export class CoursePurchaseService {
           .sort({ createdAt: 1 })
           .select('_id');
 
-        if (Data.paymentPlan === 'PARTIAL') {
+        if (paymentPlan === 'FULL') {
+          data.lessonsUnlocked = lessons.map((lesson) => lesson._id);
+        }
+
+        if (paymentPlan === 'PARTIAL') {
           const splitIndex = Math.floor(lessons.length / 2);
-          const half = lessons.slice(0, splitIndex);
-          Data.lessonsUnlocked = half;
-        } else if (Data.paymentPlan === 'FULL') {
-          Data.lessonsUnlocked = lessons;
+
+          data.lessonsUnlocked = lessons
+            .slice(0, splitIndex)
+            .map((lesson) => lesson._id);
         }
       }
 
-      const coursePurchase = new this.coursePurchaseModel(Data);
-      coursePurchase.save();
+      // ADVANCED / CONSULTING
+      if (
+        advancedTypes.includes(course.type) &&
+        paymentPlan === 'INSTALLMENT'
+      ) {
+        const availableTo = new Date(data.accessStartDate);
 
-      if (!coursePurchase) {
-        throw new BadRequestException('Помилка створення покупки');
+        availableTo.setMonth(availableTo.getMonth() + 1);
+
+        data.availableTo = availableTo;
       }
+
+      const coursePurchase = new this.coursePurchaseModel(data);
+
+      await coursePurchase.save();
 
       return { message: 'success' };
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 
@@ -174,7 +170,6 @@ export class CoursePurchaseService {
         .exec();
 
       // Мапимо результат, щоб courseId містив і id і name
-
 
       const info = coursePurchases.map((purchase) => ({
         course: {
