@@ -17,6 +17,7 @@ import { OptionalAuth } from 'src/common/decorators/optional-auth.decorator';
 import { Roles } from 'src/role/roles.decorator';
 import { Role } from 'src/role/role.enum';
 import { Public } from 'src/common/decorators/isPublic.decorator';
+import { CreateGiftPayment } from './dto/create-gift-purchase.dto';
 
 @ApiTags('Payments')
 @Controller('payments')
@@ -31,6 +32,16 @@ export class PaymentsController {
   @ApiResponse({ status: 400, description: 'Invalid data' })
   create(@Body() body: CreatePaymentDto, @User() user?: UserEntity) {
     return this.service.createPayment(body, user);
+  }
+
+  @OptionalAuth()
+  @Post('product/gift/create')
+  @ApiOperation({ summary: 'Create payment for gift product' })
+  @ApiBody({ type: CreatePaymentDto })
+  @ApiResponse({ status: 201, description: 'Payment created successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid data' })
+  createGift(@Body() body: CreateGiftPayment) {
+    return this.service.createGiftPayment(body);
   }
 
   @Roles(Role.User)
@@ -70,6 +81,7 @@ export class PaymentsController {
       typeof Object.keys(body)[0] === 'string'
         ? JSON.parse(Object.keys(body)[0])
         : body;
+
     return this.service.handleProductCallback(payload);
   }
 

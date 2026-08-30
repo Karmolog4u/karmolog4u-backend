@@ -22,6 +22,13 @@ export class CreatePaymentDto {
   email: string;
 
   @ApiPropertyOptional({
+    example: 'Марія Україна',
+    description: "Ім'я покупця",
+  })
+  @IsString()
+  name: string;
+
+  @ApiPropertyOptional({
     example: '+380671234567',
     description: 'Телефон клієнта',
   })

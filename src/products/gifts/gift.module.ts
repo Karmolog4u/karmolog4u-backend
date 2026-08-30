@@ -8,5 +8,6 @@ import { Module } from '@nestjs/common';
   imports: [AdminGiftModule],
   controllers: [GiftController],
   providers: [GiftService],
+  exports: [GiftService],
 })
 export class GiftModule {}

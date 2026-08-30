@@ -9,7 +9,7 @@ export class GiftEntity {
     example: '6744d2c8bd8f6d722ff28c49',
     required: false,
   })
-  _id?: Types.ObjectId;
+  id?: Types.ObjectId;
 
   @ApiProperty({
     type: Name,

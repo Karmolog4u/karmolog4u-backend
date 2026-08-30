@@ -4,12 +4,14 @@ import { Model, Types } from 'mongoose';
 import { Webinar } from 'src/admin/products/webinars/schemas/webinars.schema';
 import { GuidesAndBooks } from 'src/admin/products/guides_and_books/schemas/guides_and_books.schema';
 import { Meditation } from './meditations/schemas/meditation.schema';
+import { GiftService } from './gifts/gift.service';
 
 @Injectable()
 export class ProductService {
   constructor(
     @InjectModel(Webinar.name) private webinarModel: Model<Webinar>,
     @InjectModel(Meditation.name) private meditationModel: Model<Meditation>,
+    private readonly giftService: GiftService,
     @InjectModel(GuidesAndBooks.name)
     private guidesAndBooksModel: Model<GuidesAndBooks>,
   ) {}
@@ -208,5 +210,12 @@ export class ProductService {
     if (guide) return 'guide';
 
     return null;
+  }
+  async getGift(productId: string) {
+    const gift = await this.giftService.findGiftById(productId);
+    if (!gift) {
+      throw new NotFoundException(`Продукт з id ${productId} не знайдено`);
+    }
+    return gift;
   }
 }

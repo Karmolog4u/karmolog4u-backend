@@ -48,6 +48,12 @@ export class Purchase {
   @Prop({ type: String })
   productType: string;
 
+  @Prop({ type: String })
+  name: string;
+
+  @Prop({ type: String, default: null })
+  promocode: string | null;
+
   @Prop({ type: Number })
   productPrice: number;
 

@@ -3,7 +3,6 @@ import {
   BadRequestException,
   NotFoundException,
   Logger,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -38,6 +37,7 @@ import { MailService } from 'src/mail/mail.service';
 import * as path from 'path';
 import { existsSync } from 'fs';
 import { ModuleService } from 'src/admin/education/module/module.service';
+import { CreateGiftPayment } from './dto/create-gift-purchase.dto';
 
 interface SignatureDataInterface {
   orderReference: string;
@@ -58,6 +58,7 @@ export class PaymentsService {
   private serviceEdUrl: string;
   private currency: string;
   private merchantDomainName: string;
+  private adminEmail: string;
   private readonly logger = new Logger(PaymentsService.name);
 
   constructor(
@@ -76,6 +77,7 @@ export class PaymentsService {
     private readonly modulesService: ModuleService,
   ) {
     this.merchantAccount = this.configService.getOrThrow('WFP_MERCHANT');
+    this.adminEmail = this.configService.getOrThrow('ADMIN_EMAIL');
     this.merchantSecretKey = this.configService.getOrThrow('WFP_SECRET');
     this.returnUrl = this.configService.getOrThrow('WFP_RETURN_URL');
     this.serviceUrl = this.configService.getOrThrow('WFP_CALLBACK_PRODUCT_URL');
@@ -158,7 +160,7 @@ export class PaymentsService {
     };
 
     const existingUser = await this.userModel.findOne({ email: dto.email });
-    console.log('user:', existingUser);
+
     await this.checkExistingPurchase(dto);
 
     // if user email not equal to dto.email do by email, if user email equal to dto.email do by userId
@@ -186,6 +188,9 @@ export class PaymentsService {
       userId: existingUser?._id ?? null,
       clientEmail: dto.email,
       clientPhone: dto.phone,
+      name: !!existingUser
+        ? `${existingUser.name} ${existingUser.lastName}`
+        : dto.name,
       amount,
     });
 
@@ -222,6 +227,102 @@ export class PaymentsService {
       },
     };
   }
+  async createGiftPayment(data: CreateGiftPayment) {
+    // find product
+
+    const product = await this.productService.getGift(data.itemId);
+
+    let amount = product.price;
+
+    // check for active discount
+    const discount = await this.discountService.findDiscount({
+      refId: product.id,
+    });
+
+    const now = Date.now();
+
+    const isUseDiscount =
+      Boolean(discount) &&
+      new Date(discount.start).getTime() <= now &&
+      now <= new Date(discount.expiredAt).getTime();
+
+    if (isUseDiscount) {
+      amount = product.price - (product.price * discount.discount) / 100;
+    }
+
+    const promocode = data.promocode;
+    if (promocode) {
+      const validPromocode = await this.promoCodeService.validatePromoCode(
+        promocode,
+        product.id,
+      );
+      if (validPromocode) {
+        amount = amount - (amount * validPromocode.promoDiscount) / 100;
+      } else {
+        throw new BadRequestException('Некоректний промокод');
+      }
+    }
+    const orderReference = `order_${now}_${product.id.toString()}_${
+      product.price
+    }_${amount}`;
+
+    const returnProductUrl = `${this.returnUrl}/products/gifts`;
+
+    await this.checkExistingPurchase(data);
+
+    const purchase: PurchaseDocument = await this.purchaseModel.create({
+      orderReference,
+      productName: product.name.uk,
+      productId: product.id,
+      productPrice: product.price,
+      productType: 'Gift',
+      paymentType: PaymentType.FULL,
+      currency: this.currency,
+      userId: null,
+      clientEmail: data.email,
+      clientPhone: data.phone,
+      amount,
+      promocode: data.promocode ?? null,
+      name: data.name,
+      rawResponse: {
+        warehouse: data.warehouse,
+        city: data.city,
+      },
+    });
+
+    const orderDate = Math.floor(now / 1000);
+
+    const signature = this.generateSignature({
+      orderReference,
+      orderDate,
+      amount,
+      currency: this.currency,
+      productName: [purchase.productName],
+      productPrice: [purchase.productPrice],
+      productCount: [1],
+    });
+
+    return {
+      orderReference,
+      status: PaymentStatus.Pending,
+      paymentUrl: 'https://secure.wayforpay.com/pay',
+      formData: {
+        merchantAccount: this.merchantAccount,
+        merchantAuthType: 'SimpleSignature',
+        merchantSignature: signature,
+        merchantDomainName: this.merchantDomainName,
+        orderReference,
+        orderDate,
+        amount,
+        currency: purchase.currency,
+        productName: [purchase.productName],
+        productPrice: [purchase.productPrice],
+        productCount: [1],
+        returnUrl: returnProductUrl,
+        serviceUrl: this.serviceUrl,
+      },
+    };
+  }
 
   async handleProductCallback(data: any) {
     const purchase = await this.purchaseModel
@@ -233,7 +334,6 @@ export class PaymentsService {
     if (!purchase) {
       throw new BadRequestException('Order not found');
     }
-
     const status =
       purchase.status === PurchaseStatus.APPROVED ? 'accept' : 'reject';
 
@@ -245,7 +345,7 @@ export class PaymentsService {
       throw new BadRequestException('Invalid signature');
     }
 
-    purchase.rawResponse = data;
+    purchase.rawResponse = { ...purchase?.rawResponse, ...data };
 
     switch (data.transactionStatus) {
       case 'Approved':
@@ -261,9 +361,19 @@ export class PaymentsService {
         break;
     }
 
-    if (purchase.status === PurchaseStatus.APPROVED) {
+    if (purchase.productType === 'Gift') {
+      await this.processGiftInfoSending(purchase);
+    } else {
       await this.processBusinessLogic(purchase);
     }
+    if (purchase.status === PurchaseStatus.APPROVED) {
+      if (purchase.productType === 'Gift') {
+        await this.processGiftInfoSending(purchase);
+      } else {
+        await this.processBusinessLogic(purchase);
+      }
+    }
+    console.log('emails finished');
 
     purchase.processed = true;
     purchase.expiresAt = undefined;
@@ -717,6 +827,49 @@ export class PaymentsService {
       targetModule: purchase.productType,
     });
   }
+
+  private async processGiftInfoSending(purchase: PurchaseDocument) {
+    const results = await Promise.allSettled([
+      this.mailService.sendEmail(
+        this.adminEmail,
+        'Karmolog4u | Придбано новий продукт',
+        'purchaseGiftAdminEmail',
+        {
+          email: purchase.clientEmail,
+          phone: purchase.clientPhone,
+          city: purchase.rawResponse.city,
+          warehouse: purchase.rawResponse.warehouse,
+          name: purchase.name,
+          productName: purchase.productName,
+        },
+      ),
+
+      this.mailService.sendEmail(
+        purchase.clientEmail,
+        'Karmolog4u | Дякую за покупку товару',
+        'purchaseGiftCustomerEmail',
+        {
+          phone: purchase.clientPhone,
+          city: purchase.rawResponse.city,
+          warehouse: purchase.rawResponse.warehouse,
+          name: purchase.name,
+          productName: purchase.productName,
+        },
+      ),
+    ]);
+
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        console.error(
+          `Помилка відправки ${
+            index === 0 ? 'адмін' : 'клієнт'
+          } емейл подарунку`,
+          result.reason,
+        );
+      }
+    });
+  }
+
   private async processEducationBusinessLogic(purchase: PurchaseDocument) {
     const sskList = ['SSK_INDEPENDENT', 'SSK_WITH_CURATOR', 'SSK_WITH_SERGIY'];
     if (!purchase.userId) {
