@@ -33,7 +33,6 @@ export class AuthService {
   constructor(
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
-    // @Inject(UserService) private userService: UserService,
     @Inject(TokenService) private tokenService: TokenService,
     @Inject(JwtService) private jwtService: JwtService,
     @Inject(VerificationService) private verifyService: VerificationService,
@@ -374,7 +373,7 @@ export class AuthService {
     }
   }
 
-  async verifyUserCredentials(token) {
+  async verifyUserCredentials(token: string) {
     try {
       const secret = this.configService.get<string>('JWT_SECRET');
       await this.jwtService.verifyAsync(token, {

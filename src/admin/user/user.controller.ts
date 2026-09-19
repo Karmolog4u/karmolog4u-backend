@@ -296,4 +296,16 @@ export class UserController {
       );
     }
   }
+  @Post(':userId/reset-password')
+  @ApiOperation({ summary: 'reset user password' })
+  @ApiResponse({
+    status: 200,
+    description: 'Update user by Admin',
+    type: ResponseSuccessDto,
+  })
+  @ApiParam({ name: 'userId', type: String })
+  @HttpCode(200)
+  async resetUserPassword(@Param('userId') id: string) {
+    return await this.userService.resetUserPassword(id);
+  }
 }

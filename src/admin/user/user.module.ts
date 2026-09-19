@@ -5,9 +5,10 @@ import { UserService } from './user.service';
 import { AuthModule } from 'src/auth/auth.module';
 import { MailModule } from 'src/mail/mail.module';
 import { ConfigModule } from '@nestjs/config';
+import { TokenModule } from 'src/token/token.module';
 
 @Module({
-  imports: [UserMainModule, AuthModule, MailModule, ConfigModule],
+  imports: [UserMainModule, AuthModule, MailModule, ConfigModule, TokenModule],
   controllers: [UserController],
   providers: [UserService],
 })

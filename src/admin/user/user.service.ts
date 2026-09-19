@@ -25,6 +25,7 @@ import * as ExcelJS from 'exceljs';
 import { Response } from 'express';
 import { Types } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
+import { TokenService } from 'src/token/token.service';
 
 @Injectable()
 export class UserService {
@@ -32,6 +33,7 @@ export class UserService {
     @InjectModel(User.name) private userModel: Model<User>,
     @Inject(AuthService) private authService: AuthService,
     @Inject(MailService) private mailService: MailService,
+    @Inject(TokenService) private tokenService: TokenService,
     private configService: ConfigService,
   ) {}
   async getAllUsers(
@@ -464,5 +466,41 @@ export class UserService {
 
       throw new BadRequestException('Щось пішло не так(');
     }
+  }
+  async resetUserPassword(id: string) {
+    const userId = new mongoose.Types.ObjectId(id.toString());
+    const user = await this.userModel.findById(userId).select('email').lean();
+    if (!user) {
+      throw new NotFoundException('Користувача не знайдено');
+    }
+    const newPassword = generateUniquePassword(16, {
+      includeUppercase: true,
+      includeNumbers: true,
+      includeSymbols: true,
+    });
+
+    await this.updateUserPassword(user._id, newPassword);
+    await this.tokenService.deleteAllSession(user._id);
+    await this.mailService.sendEmail(
+      user.email,
+      'Password Recovery',
+      'resetPassword', // HBS template name
+      {
+        name: user.name, // User's full name
+        password: newPassword, // Newly generated password
+        loginUrl: `${this.configService.get<string>(
+          'FRONT_DOMAIN',
+        )}/auth/login`, // Login page URL
+        appName: 'Karmolog4u',
+        year: new Date().getFullYear(),
+      },
+    );
+    return { message: 'success' };
+  }
+
+  private async updateUserPassword(id: Types.ObjectId, password: string) {
+    await this.userModel.findByIdAndUpdate(id, {
+      password: password,
+    });
   }
 }
