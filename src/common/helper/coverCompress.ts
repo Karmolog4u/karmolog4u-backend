@@ -29,10 +29,8 @@ export const coverCompress = async (
 
     // Generate the accessible link for the compressed image
     const envValue = configService.get<string>('SERVER_IP');
-    console.log('envValue', envValue);
 
     const coverPath = path.join('covers', `${name}.webp`);
-    console.log('cover path ', coverPath);
 
     return `${envValue}${coverPath}`;
   } catch (error) {

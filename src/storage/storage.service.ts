@@ -179,35 +179,6 @@ export class StorageService {
     await this.createFolder(productsFolder);
   }
 
-  // async moveFiles(
-  //   fileLinks: string[],
-  //   tempFolder: string,
-  //   storageFolder: string,
-  // ): Promise<string[]> {
-  //   try {
-  //     await fs.mkdir(storageFolder, { recursive: true }); // Ensure storage folder exists
-
-  //     const updatedLinks: string[] = [];
-
-  //     for (const fileLink of fileLinks) {
-  //       const fileName = path.basename(fileLink); // Extract filename from URL or path
-  //       const tempPath = path.join(tempFolder, fileName); // Temporary file path
-  //       const storagePath = path.join(storageFolder, fileName); // New storage location
-
-  //       await fs.rename(tempPath, storagePath); // Move file
-  //       console.log(`Moved: ${fileName} → ${storagePath}`);
-
-  //       // Update the link to replace "temporaryCovers" with "covers"
-  //       const updatedLink = fileLink.replace('/temporaryFiles/', '/file/');
-  //       updatedLinks.push(updatedLink);
-  //     }
-
-  //     return updatedLinks;
-  //   } catch (error) {
-  //     console.error(`Error moving files: ${error.message}`);
-  //     return [];
-  //   }
-  // }
   getTempFilesFolder() {
     const filePath = path.join(process.cwd(), 'temporaryFiles');
     return filePath;
@@ -266,7 +237,6 @@ export class StorageService {
         try {
           // copy file to destination folder
           await fs.copyFile(sourcePath, destinationPath); // Copy file
-          // console.log(`Copied: ${file.savedName}`);
           const relativePath = path.relative(
             this.getStoragePath(),
             destinationPath,

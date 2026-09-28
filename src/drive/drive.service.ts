@@ -40,14 +40,12 @@ export class DriveService {
           and trashed=false
         `;
 
-    console.log('query', query);
 
     const res = await this.drive.files.list({
       q: query,
       fields: 'files(id, name, mimeType, size)',
       //   spaces: 'drive',
     });
-    console.log('res', res);
 
     return res.data.files?.[0] || null;
   }
@@ -61,7 +59,6 @@ export class DriveService {
     mimeType?: string;
   }> {
     const file = await this.findFileByName(name);
-    console.log(file);
 
     if (!file) {
       throw new Error(`File not found: ${name}`);

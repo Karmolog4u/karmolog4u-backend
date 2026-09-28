@@ -300,8 +300,6 @@ export class CoursePurchaseService {
         course: course._id,
         type: 'PRACTICAL',
       });
-      console.log('practicesCount', practicesCount);
-      console.log('purchase.numberOfPractices', purchase.numberOfPractices);
 
       if (practicesCount <= purchase.numberOfPractices) {
         return { message: 'Максимальна кількість практик' };

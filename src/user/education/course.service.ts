@@ -596,8 +596,6 @@ export class CourseService {
     const fileName = `${userName}_${courseTypeShort}.pdf`;
 
     const file = await this.driveService.downloadFile(fileName);
-    // console.log(`Certificate file for ${fileName}:`, file);
-    console.log('file', file);
 
     const certificateFileName = `certificate_${fileName}`;
 

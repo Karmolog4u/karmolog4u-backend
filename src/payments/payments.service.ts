@@ -373,7 +373,6 @@ export class PaymentsService {
         await this.processBusinessLogic(purchase);
       }
     }
-    console.log('emails finished');
 
     purchase.processed = true;
     purchase.expiresAt = undefined;

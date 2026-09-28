@@ -82,7 +82,6 @@ export class ProductPurchaseService {
   }
 
   async addProductPurchases(userId: string, data: AddProductsDto) {
-    console.log(userId, data);
 
     const promises = data.products.map((i) =>
       this.addProductPurchase(userId, i.productId, i.targetModule),

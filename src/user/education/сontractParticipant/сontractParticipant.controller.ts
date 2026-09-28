@@ -101,7 +101,6 @@ export class ContractParticipantController {
     @Param() param: IdParams,
   ) {
     try {
-      console.log(param.id);
 
       const result = await this.contractService.sign(user, data, param.id);
 

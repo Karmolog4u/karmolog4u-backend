@@ -20,13 +20,11 @@ export class SendApplicationService {
   async sendApplication(data: CreateAssociationApplicationDto) {
     //save to db
     const application = await this.applicationModel.create(data);
-    console.log(1);
 
     let adminEmailSent = false;
     let userEmailSent = false;
 
     const adminEmail = this.configService.get<string>('ADMIN_EMAIL');
-    console.log(adminEmail);
 
     try {
       // send app to admin

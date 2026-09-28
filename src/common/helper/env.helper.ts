@@ -18,6 +18,5 @@ export function getEnvPath(dest: string): string {
     filePath = resolve(process.cwd(), 'dist/common/envs', filename);
   }
 
-  console.log('Environment file path:', filePath);
   return filePath;
 }

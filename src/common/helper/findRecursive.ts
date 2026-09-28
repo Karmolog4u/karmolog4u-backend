@@ -84,7 +84,6 @@ export async function findFileInMaterials(
     for (const dir of products) {
       if (dir.isDirectory()) {
         const filePath = path.join(productsDir, dir.name, fileName);
-        console.log(filePath);
         // return filePath
         try {
           const stat = await fs.stat(filePath);

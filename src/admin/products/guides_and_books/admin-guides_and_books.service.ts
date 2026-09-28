@@ -215,24 +215,20 @@ export class AdminGuidesAndBooksService {
       const updateData: Record<string, any> = {};
 
       if (file) {
-        console.log(file, 'file');
 
         //check exist
         const existingFiles = await this.storageService.filterExistingFiles([
           file,
         ]);
-        console.log(existingFiles, 'ex');
 
         if (existingFiles.length > 0) {
           const files = await this.storageService.copyFiles(
             folderPath,
             existingFiles,
           );
-          console.log(files, 'fil');
 
           //delete from temporary folder
           await this.storageService.deleteFiles(process.cwd(), existingFiles);
-          console.log('delete');
 
           //add to array lesson id
           const filesToSave = attachTargetToFiles(
@@ -240,15 +236,12 @@ export class AdminGuidesAndBooksService {
             'GuidesAndBooks',
             newGuidesAndBooks._id,
           );
-          console.log(filesToSave, 'filetosave');
 
           //create file documents
           const savedFiles = await this.filesService.createFiles(filesToSave);
-          console.log(savedFiles, 'saved');
 
           //get ids to save in db lesson
           const ids = savedFiles.map((item) => item._id.toString());
-          console.log(ids, 'ids');
 
           //save to lesson
           updateData.file = ids[0];

@@ -41,27 +41,6 @@ export async function logFilesInFolder(folderPath: string): Promise<void> {
   }
 }
 
-// export async function createFolder(folderPath): Promise<string> {
-//   //   const folderPath = path.join(process.cwd(), '..', 'storage'); // Шлях до папки
-
-//   try {
-//     // Перевіряємо, чи існує папка
-//     try {
-//       await fs.access(folderPath);
-//       console.log(`Папка вже існує: ${folderPath}`);
-//       //   logFilesInFolder(folderPath);
-//       return folderPath;
-//     } catch {
-//       // Якщо папка не існує, створюємо її
-//       await fs.mkdir(folderPath, { recursive: true });
-//       console.log(`Папка створена успішно: ${folderPath}`);
-//       return folderPath;
-//     }
-//   } catch (error) {
-//     console.error(`Помилка при створенні папки: ${error.message}`);
-//     throw error;
-//   }
-// }
 
 export async function createStorageFolder() {
   const storageFolder = path.join(process.cwd(), '..', 'storage'); // Шлях до папки

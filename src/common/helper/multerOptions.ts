@@ -28,8 +28,6 @@ export const multerOptionsFiles = (): MulterOptions => ({
   storage: multer.diskStorage({
     destination: './temporaryFiles', // Директорія для збереження файлів
     filename: async (req, file, callback) => {
-      // console.log('file.originalname', file.originalname);
-      console.log(process.cwd());
 
       const originalName = normalizeFilename(file.originalname); // Правильне ім'яs
 

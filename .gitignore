@@ -1,7 +1,7 @@
 # compiled output
 /dist
 /envs
-
+/gmail-token
 
 # Logs
 logs

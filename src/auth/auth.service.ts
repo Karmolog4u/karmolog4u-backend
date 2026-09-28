@@ -283,6 +283,7 @@ export class AuthService {
           year: new Date().getFullYear(),
         },
       );
+
       return { message: 'success' };
     } catch (error) {
       throw new HttpException(

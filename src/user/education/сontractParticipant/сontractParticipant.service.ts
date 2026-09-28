@@ -211,7 +211,6 @@ export class ContractParticipantService {
     if (!course) {
       throw new NotFoundException('Курс не знайдено');
     }
-    console.log(contractParticipant);
 
     const contractDetails = {
       contractId: contract._id,
@@ -233,7 +232,6 @@ export class ContractParticipantService {
       header: contract.header,
       points: contract.points,
     };
-    console.log(contractDetails);
 
     if (!purchase.agreement) {
       return {
