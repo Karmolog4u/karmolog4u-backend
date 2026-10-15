@@ -8,6 +8,7 @@ import {
   BadRequestException,
   NotFoundException,
   ForbiddenException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -37,7 +38,8 @@ export class TokenService {
         refreshToken: token.refreshToken,
       };
     } catch (error) {
-      throw new BadRequestException('Помилка запису в БД');
+      console.error('[TokenService.newToken] Failed to save token:', error);
+      throw new InternalServerErrorException('Помилка запису в БД');
     }
   }
 
