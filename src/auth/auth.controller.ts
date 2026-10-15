@@ -109,9 +109,14 @@ export class AuthController {
     @Ip() ip: any,
   ): Promise<LoginResponseDto> {
     try {
-      const parser = new UAParser(userAgent);
+      const safeUserAgent = userAgent || 'unknown';
+      const parser = new UAParser(safeUserAgent);
       const platform = parser.getOS().name || 'undefined';
-      const headersData: HeadersDataDto = { platform, userAgent, ip };
+      const headersData: HeadersDataDto = {
+        platform: parser.getOS().name || 'unknown',
+        userAgent: safeUserAgent,
+        ip: ip || 'unknown',
+      };
       const login = await this.authService.singIn(loginUserDto, headersData);
       return login;
     } catch (error) {
