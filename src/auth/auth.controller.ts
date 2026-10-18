@@ -258,6 +258,7 @@ export class AuthController {
   @ApiNotFoundResponse({ description: 'Токен верифікації не знайдено' })
   @HttpCode(200)
   async verifyUser(@Query('token') token: string): Promise<ResponseSuccessDto> {
+
     try {
       return await this.authService.verifyUser(token);
     } catch (error) {

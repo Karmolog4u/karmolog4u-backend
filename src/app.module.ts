@@ -40,19 +40,7 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
         uri: config.get<string>('MONGO_URL'),
       }),
     }),
-    // GcsModule.forRootAsync({
-    //   inject: [ConfigService],
-    //   useFactory: (config: ConfigService) => ({
-    //     projectId: config.get<string>('GCP_PROJECT_ID'),
-    //     bucket: config.get<string>('GCP_BUCKET'),
-    //     credentials: {
-    //       client_email: config.get<string>('GCP_CLIENT_EMAIL'),
-    //       private_key: config
-    //         .get<string>('GCP_PRIVATE_KEY')
-    //         ?.replace(/\\n/g, '\n'),
-    //     },
-    //   }),
-    // }),
+
     DriveModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({

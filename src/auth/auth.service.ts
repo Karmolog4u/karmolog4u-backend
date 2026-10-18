@@ -300,23 +300,29 @@ export class AuthService {
   }
 
   async verifyUser(token: string) {
+    console.log(token);
+
     try {
       const secret = this.configService.get<string>('JWT_SECRET');
       const payload = await this.jwtService.verifyAsync(token, {
         secret: secret,
       });
+
       if (!payload) {
         throw new BadRequestException('Недійсний або протермінований токен');
       }
+
       const verifyToken = await this.verifyService.getVerifyToken({
         userId: payload._id,
         email: payload.email,
       });
+
       if (verifyToken.token != token) {
         throw new BadRequestException('Невірний токен верифікації');
       }
       await this.userService.updateUser(verifyToken.userId, { verified: true });
       await this.verifyService.deleteVerifyToken({ _id: verifyToken._id });
+
       return { message: 'success' };
     } catch (error) {
       throw new HttpException(

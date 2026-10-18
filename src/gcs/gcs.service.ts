@@ -43,23 +43,6 @@ export class GcsService {
     }
   }
 
-  // async getFileStream(fileName: string) {
-  //   const path = await this.findFileByName(fileName);
-  //   // шукаємо по повному імені або в будь-якій "папці"
-  //   const [files] = await this.bucket.getFiles({
-  //     prefix: fileName,
-  //   });
-
-  //   const found = files.find((file) => {
-  //     return file.name.endsWith(fileName);
-  //   });
-
-  //   if (!found) {
-  //     return null;
-  //   }
-
-  //   return found.name; // повний шлях у bucket
-  // }
 
   async getFileStream(fileName: string) {
     console.log(`Searching for file: ${fileName}`);
