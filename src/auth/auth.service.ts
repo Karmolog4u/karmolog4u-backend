@@ -55,6 +55,12 @@ export class AuthService {
         email: user.email,
         token: verifyToken,
       });
+      console.log(
+        `${this.configService.get<string>(
+          'FRONT_DOMAIN',
+        )}/cabinet/verify?token=${verifyToken}`,
+      );
+
       //якщо не verified тоді надсилає емейл
       if (!registerUserDto?.verified) {
         await this.mailService.sendEmail(
