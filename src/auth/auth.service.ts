@@ -77,6 +77,7 @@ export class AuthService {
           },
         );
       }
+      console.log(user.name)
       return user;
     } catch (error) {
       throw new HttpException(
