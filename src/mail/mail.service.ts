@@ -1,36 +1,20 @@
-// import { Injectable, ServiceUnavailableException } from '@nestjs/common';
-// import { MailerService } from '@nestjs-modules/mailer';
-
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { google } from 'googleapis';
+import { Resend } from 'resend';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as handlebars from 'handlebars';
-import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class MailService {
-  private readonly gmail;
+  private readonly resend: Resend;
   private readonly from: string;
   private readonly templateDir: string;
 
   constructor(private readonly config: ConfigService) {
-    const oauth2Client = new google.auth.OAuth2(
-      this.config.get<string>('GMAIL_CLIEND_ID'),
-      this.config.get<string>('GMAIL_CLIEND_SECRET'),
-    );
+    this.resend = new Resend(this.config.getOrThrow<string>('RESEND_API_KEY'));
 
-    oauth2Client.setCredentials({
-      refresh_token: this.config.get<string>('GMAIL_REFRESH_TOKEN'),
-    });
-
-    this.gmail = google.gmail({
-      version: 'v1',
-      auth: oauth2Client,
-    });
-
-    this.from = this.config.get<string>('MAIL_FROM')!;
+    this.from = this.config.getOrThrow<string>('MAIL_FROM');
 
     this.templateDir = path.join(process.cwd(), 'templates');
   }
@@ -58,29 +42,37 @@ export class MailService {
 
       const html = compiledTemplate(context);
 
-      const transporter = nodemailer.createTransport({
-        streamTransport: true,
-        buffer: true,
-      });
+      const attachments = attachment
+        ? [
+            {
+              filename: attachment.filename,
+              ...(attachment.content
+                ? { content: attachment.content.toString('base64') }
+                : { path: attachment.path }),
+              ...(attachment.contentType
+                ? { contentType: attachment.contentType }
+                : {}),
+            },
+          ]
+        : [];
 
-      const mail = await transporter.sendMail({
-        from: `"Karmolog4u" <${this.from}>`,
-        to,
+      const { data, error } = await this.resend.emails.send({
+        from: `Karmolog4u <${this.from}>`,
+        to: [to],
         subject,
         html,
-        attachments: attachment ? [attachment] : [],
+        attachments,
       });
 
-      const raw = mail.message.toString('base64url');
+      if (error) {
+        console.error('Resend error:', error);
+        throw new Error(error.message);
+      }
 
-      await this.gmail.users.messages.send({
-        userId: 'me',
-        requestBody: {
-          raw,
-        },
-      });
-
-      return { message: 'success' };
+      return {
+        message: 'success',
+        id: data?.id,
+      };
     } catch (error) {
       console.error(error, 'error mail');
 
