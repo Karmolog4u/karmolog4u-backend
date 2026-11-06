@@ -43,9 +43,11 @@ export class UserService {
 
   async findUserByEmail(userData: FindUserByEmailDto): Promise<UserEntity> {
     try {
-      const user = await this.userModel.findOne({ ...userData }).exec();
+      const user = await this.userModel
+        .findOne({ email: userData.email.toLowerCase().trim() })
+        .exec();
       if (!user) {
-        throw new Error();
+        throw new NotFoundException('Користувача не знайдено');
       }
       return user;
     } catch (error) {
@@ -80,12 +82,18 @@ export class UserService {
 
   async newUser(userData: NewUserDto) {
     try {
-      const user = new this.userModel(userData);
+      const email = userData.email.toLowerCase().trim();
+      const checkUserByEmail = await this.userModel.findOne({ email }).exec();
+      if (checkUserByEmail) {
+        throw new BadRequestException('Користувач вже існує');
+      }
+      const user = new this.userModel({
+        ...userData,
+        email,
+      });
 
       await user.save();
-      const folderPath = await this.storageService.createUserStorage(
-        user._id.toString(),
-      );
+      await this.storageService.createUserStorage(user._id.toString());
       return user;
     } catch (error) {
       throw new BadRequestException('Email вже зареєстрований!');
@@ -131,6 +139,9 @@ export class UserService {
     try {
       const { cover, ...data } = userData;
       const updateData: Record<string, any> = { ...data }; // Store all updates
+      if (userData.email) {
+        updateData.email = userData.email.toLowerCase().trim();
+      }
       if (cover) {
         const folderPath = await this.storageService.createUserStorage(
           _id.toString(),

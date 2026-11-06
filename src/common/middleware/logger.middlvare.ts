@@ -13,13 +13,10 @@ export class LoggerMiddleware implements NestMiddleware {
     response.on('finish', () => {
       const { statusCode } = response;
       const contentLength = response.get('content-length');
-
+      const statusMessage = response.statusMessage;
       this.logger.debug(
-        `${method} ${originalUrl}   ${statusCode}   ${contentLength} - ${userAgent} ${ip}`,
+        `${method} ${originalUrl}   "${statusCode} ${statusMessage}"  ${contentLength} - ${userAgent} ${ip}`,
       );
-      // if (method !== 'GET') {
-      //   this.logger.debug(request.body);
-      // }
     });
 
     next();

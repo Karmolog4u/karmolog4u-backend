@@ -109,13 +109,8 @@ export class AuthController {
     @Ip() ip: any,
   ): Promise<LoginResponseDto> {
     try {
-      console.log('[LOGIN] user-agent:', userAgent);
-
       const parser = new UAParser(userAgent);
-      console.log('[LOGIN] parsed OS:', parser.getOS());
-
       const platform = parser.getOS().name || 'unknown';
-
       const headersData: HeadersDataDto = {
         platform,
         userAgent: userAgent || 'unknown',
@@ -258,7 +253,6 @@ export class AuthController {
   @ApiNotFoundResponse({ description: 'Токен верифікації не знайдено' })
   @HttpCode(200)
   async verifyUser(@Query('token') token: string): Promise<ResponseSuccessDto> {
-
     try {
       return await this.authService.verifyUser(token);
     } catch (error) {

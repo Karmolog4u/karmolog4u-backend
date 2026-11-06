@@ -55,11 +55,6 @@ export class AuthService {
         email: user.email,
         token: verifyToken,
       });
-      console.log(
-        `${this.configService.get<string>(
-          'FRONT_DOMAIN',
-        )}/cabinet/verify?token=${verifyToken}`,
-      );
 
       //якщо не verified тоді надсилає емейл
       if (!registerUserDto?.verified) {
@@ -98,7 +93,7 @@ export class AuthService {
   ): Promise<LoginResponseDto> {
     try {
       const user = await this.userService.findUserByEmail({
-        email: loginUserDto.email,
+        email: loginUserDto.email.toLocaleLowerCase(),
       });
       if (!user.verified) {
         throw new ForbiddenException('Користувач не верифікований');
@@ -265,6 +260,7 @@ export class AuthService {
       const user = await this.userService.findUserByEmail({
         email: data.email,
       });
+
       if (!user.verified) {
         throw new ForbiddenException('Користувач не верифікований');
       }
@@ -306,8 +302,6 @@ export class AuthService {
   }
 
   async verifyUser(token: string) {
-    console.log(token);
-
     try {
       const secret = this.configService.get<string>('JWT_SECRET');
       const payload = await this.jwtService.verifyAsync(token, {
