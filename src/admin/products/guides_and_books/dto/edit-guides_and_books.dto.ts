@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   CategoryGuidesAndBooks,
   Description,
+  GuidesAndBooksVideo,
   Name,
   Status,
 } from '../schemas/guides_and_books.schema';
@@ -51,12 +52,19 @@ export class EditGuidesAndBooksDto {
   description?: Description;
 
   @ApiPropertyOptional({
-    type: String,
-    example: 'https://youtube.com/somevideo',
+    type: GuidesAndBooksVideo,
+    example: { video: 'video link', playlist: 'playlist link' },
     description: 'Video link',
     required: false,
   })
-  video?: string;
+  video?: GuidesAndBooksVideo;
+
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Optional external link for the guide or book',
+    example: 'https://example.com',
+  })
+  link?: string;
 
   @ApiPropertyOptional({
     type: Number,

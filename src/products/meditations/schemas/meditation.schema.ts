@@ -14,6 +14,11 @@ export class Description {
   uk: string;
 }
 
+export class MeditationVideo {
+  video: string;
+  playlist: string;
+}
+
 export enum Status {
   PUBLISHED = 'PUBLISHED',
   HIDDEN = 'HIDDEN',
@@ -51,8 +56,8 @@ export class Meditation {
   @Prop({ type: Object, default: { ru: '', uk: '' } })
   description: Description;
 
-  @Prop({ type: String, default: '' })
-  video: string;
+  @Prop({ type: Object, default: { video: '', playlist: '' } })
+  video: MeditationVideo;
 
   @Prop({ type: String, default: '' })
   cover: string;

@@ -64,6 +64,7 @@ export class GuidesAndBooksService {
             name: 1,
             price: 1,
             cover: 1,
+            link: 1,
             isWaiting: 1,
             discount: {
               $cond: {
@@ -138,6 +139,7 @@ export class GuidesAndBooksService {
             name: 1,
             price: 1,
             cover: 1,
+            link: 1,
             isWaiting: 1,
             discount: {
               $cond: {

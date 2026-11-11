@@ -11,13 +11,13 @@ import { Meditation } from 'src/products/meditations/schemas/meditation.schema';
 import { ResponseSuccessDto } from 'src/products/meditations/dto/response-success.dto';
 import { ChangeStatusMeditationDto } from './dto/change-status-meditation.dto';
 import { MeditationIdDto } from 'src/products/meditations/dto/meditation-id.dto';
-import { Discount } from '../discount/schemas/discount.schema';
+import { getYoutubeVideoId } from 'src/common/helper/getYoutubeVideoId';
+import { PUBLISHED } from 'src/common/helper/consts';
 
 @Injectable()
 export class AdminMeditationService {
   constructor(
     @InjectModel(Meditation.name) private meditationModel: Model<Meditation>,
-    @InjectModel(Discount.name) private discountModel: Model<Discount>,
   ) {}
 
   async getMeditationCount(): Promise<number> {
@@ -163,11 +163,16 @@ export class AdminMeditationService {
 
   async createMeditation(meditationData: any): Promise<MeditationEntity> {
     try {
+      if (meditationData?.video.playlist && !meditationData?.video.video) {
+        const video = await getYoutubeVideoId(meditationData.video.playlist);
+        meditationData.video.video = video.video;
+      }
+
       const newMeditation = new this.meditationModel(meditationData);
       await newMeditation.save();
       return newMeditation;
     } catch (error) {
-      throw new BadRequestException(error._message + ', Mongo DB');
+      throw new BadRequestException(error.message + ', Mongo DB');
     }
   }
 
@@ -176,6 +181,10 @@ export class AdminMeditationService {
     meditationId: MeditationIdDto,
   ): Promise<MeditationEntity> {
     try {
+      if (meditationData?.video.playlist && !meditationData?.video.video) {
+        const video = await getYoutubeVideoId(meditationData.video.playlist);
+        meditationData.video.video = video.video;
+      }
       return await this.meditationModel
         .findOneAndUpdate({ _id: meditationId }, meditationData, {
           new: true,
@@ -217,6 +226,22 @@ export class AdminMeditationService {
     status: ChangeStatusMeditationDto,
   ): Promise<ResponseSuccessDto> {
     try {
+      if (status.status === PUBLISHED) {
+        const meditation = await this.meditationModel
+          .findById(meditationId)
+          .select('video.video')
+          .lean();
+
+        if (!meditation) {
+          throw new NotFoundException('Медитацію не знайдено');
+        }
+        if (!meditation.video?.video) {
+          throw new BadRequestException(
+            'Не можна опублікувати медитацію без відео',
+          );
+        }
+      }
+
       await this.meditationModel.findOneAndUpdate(
         { _id: meditationId },
         { $set: { ...status } },
@@ -224,6 +249,12 @@ export class AdminMeditationService {
       );
       return { message: 'Успішно' };
     } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
       throw new BadRequestException(error._message + ', Mongo DB');
     }
   }
@@ -234,7 +265,7 @@ export class AdminMeditationService {
         {
           $match: {
             toDelete: false,
-            status: 'PUBLISHED',
+            status: PUBLISHED,
           },
         },
         {

@@ -12,6 +12,8 @@ import { WebinarEntity } from './dto/webinar-entity.dto';
 import { IdDto } from 'src/common/dto/id.dto';
 import { ResponseSuccessDto } from 'src/common/dto/response-success.dto';
 import { ChangeStatusWebinarDto } from './dto/change-status.dto';
+import { getYoutubeVideoId } from 'src/common/helper/getYoutubeVideoId';
+import { PUBLISHED } from 'src/common/helper/consts';
 
 @Injectable()
 export class AdminWebinarsService {
@@ -160,6 +162,10 @@ export class AdminWebinarsService {
   }
 
   async createWebinar(webinarData: any): Promise<WebinarEntity> {
+    if (webinarData?.video.playlist && !webinarData?.video.video) {
+      const video = await getYoutubeVideoId(webinarData.video.playlist);
+      webinarData.video.video = video.video;
+    }
     try {
       const newWebinar = new this.webinarModel(webinarData);
       await newWebinar.save();
@@ -174,6 +180,10 @@ export class AdminWebinarsService {
     webinarId: IdDto,
   ): Promise<WebinarEntity> {
     try {
+      if (webinarData?.video.playlist && !webinarData?.video.video) {
+        const video = await getYoutubeVideoId(webinarData.video.playlist);
+        webinarData.video.video = video.video;
+      }
       return await this.webinarModel
         .findOneAndUpdate({ _id: webinarId }, webinarData, {
           new: true,
@@ -213,6 +223,22 @@ export class AdminWebinarsService {
     status: ChangeStatusWebinarDto,
   ): Promise<ResponseSuccessDto> {
     try {
+      if (status.status === PUBLISHED) {
+        const webinar = await this.webinarModel
+          .findById(webinarId)
+          .select('video.video')
+          .lean();
+
+        if (!webinar) {
+          throw new NotFoundException('Вебінар не знайдено');
+        }
+        if (!webinar.video?.video) {
+          throw new BadRequestException(
+            'Не можна опублікувати вебінар без video.video',
+          );
+        }
+      }
+
       await this.webinarModel.findOneAndUpdate(
         { _id: webinarId },
         { $set: { ...status } },
@@ -220,6 +246,12 @@ export class AdminWebinarsService {
       );
       return { message: 'Успішно' };
     } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
       throw new BadRequestException(error._message + ', Mongo DB');
     }
   }

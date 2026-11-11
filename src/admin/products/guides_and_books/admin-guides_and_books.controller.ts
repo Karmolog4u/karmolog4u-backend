@@ -83,6 +83,9 @@ export class AdminGuidesAndBooksController {
   ): Promise<ResponseSuccessDto> {
     try {
       const parsedData = parseFields(data);
+      if (parsedData.file === '' || parsedData.file === null) {
+        delete parsedData.file;
+      }
 
       // validate data
       const { error } = newGuidesAndBooksSchema.validate(parsedData);
@@ -196,6 +199,9 @@ export class AdminGuidesAndBooksController {
   ): Promise<any> {
     try {
       const parsedData = parseFields(data);
+      if (parsedData.file === '' || parsedData.file === null) {
+        delete parsedData.file;
+      }
       const { error } = updateGuidesAndBooksSchema.validate(parsedData);
       if (error) {
         throw new BadRequestException(error.details[0].message);
@@ -231,9 +237,9 @@ export class AdminGuidesAndBooksController {
           refId: guidesAndBooksId,
         });
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { _id, ...modifiedDiscount } = editedDiscount.toObject();
         return {
           ...editedGuidesAndBooks,
+          discount: editedDiscount,
         };
       } else {
         await this.discountService.deleteDiscount({
@@ -266,7 +272,7 @@ export class AdminGuidesAndBooksController {
   })
   @ApiResponse({
     status: 200,
-    description: 'delete-meditation',
+    description: 'delete-guidesAndBooks',
     type: GuidesAndBooksEntity,
   })
   @ApiResponse({ status: 400, description: 'something wrong' })
@@ -300,7 +306,7 @@ export class AdminGuidesAndBooksController {
   })
   @ApiResponse({
     status: 200,
-    description: 'change - status -meditation',
+    description: 'change - status -guidesAndBooks',
     type: ChangeStatusGuidesAndBooksDto,
   })
   @ApiResponse({ status: 400, description: 'something wrong' })
@@ -310,9 +316,9 @@ export class AdminGuidesAndBooksController {
     status: ChangeStatusGuidesAndBooksDto,
   ): Promise<ResponseSuccessDto> {
     try {
-      const meditationId = new mongoose.Types.ObjectId(id.toString());
+      const guideAndBooksId = new mongoose.Types.ObjectId(id.toString());
       return await this.adminGuidesAndBooksService.changeStatusGuidesAndBooks(
-        meditationId,
+        guideAndBooksId,
         status,
       );
     } catch (error) {

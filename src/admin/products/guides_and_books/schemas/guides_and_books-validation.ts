@@ -46,8 +46,20 @@ export const newGuidesAndBooksSchema = Joi.object()
       .optional()
       .unknown(false),
 
-    video: Joi.string().optional().messages({
-      'string.base': 'video має бути рядком',
+    video: Joi.object()
+      .keys({
+        video: Joi.string().allow('').optional().messages({
+          'string.base': 'video.video має бути рядком',
+        }),
+        playlist: Joi.string().allow('').optional().messages({
+          'string.base': 'video.playlist має бути рядком',
+        }),
+      })
+      .optional()
+      .unknown(false),
+
+    link: Joi.string().allow('').optional().messages({
+      'string.base': 'link має бути рядком',
     }),
 
     cover: Joi.string().optional().messages({
@@ -97,6 +109,7 @@ export const newGuidesAndBooksSchema = Joi.object()
         }),
       })
       .optional()
+      .allow('', null)
       .unknown(false),
   })
   .unknown(false);
@@ -141,8 +154,19 @@ export const updateGuidesAndBooksSchema = Joi.object()
       })
       .optional()
       .unknown(false),
-    video: Joi.string().optional().messages({
-      'string.base': 'video має бути рядком',
+    video: Joi.object()
+      .keys({
+        video: Joi.string().allow('').optional().messages({
+          'string.base': 'video.video має бути рядком',
+        }),
+        playlist: Joi.string().allow('').optional().messages({
+          'string.base': 'video.playlist має бути рядком',
+        }),
+      })
+      .optional()
+      .unknown(false),
+    link: Joi.string().allow('').optional().messages({
+      'string.base': 'link має бути рядком',
     }),
     cover: Joi.string().optional().messages({
       'string.base': 'cover має бути рядком',
@@ -187,6 +211,7 @@ export const updateGuidesAndBooksSchema = Joi.object()
         }),
       })
       .optional()
+      .allow('', null)
       .unknown(false),
   })
   .unknown(false);

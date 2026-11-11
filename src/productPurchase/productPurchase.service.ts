@@ -35,6 +35,7 @@ export class ProductPurchaseService {
           localField: 'productId',
           foreignField: '_id',
           as: 'product',
+          pipeline: [{ $match: { toDelete: false } }],
         },
       },
       {

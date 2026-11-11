@@ -13,6 +13,11 @@ export class Description {
   uk: string;
 }
 
+export class GuidesAndBooksVideo {
+  video: string;
+  playlist: string;
+}
+
 export enum Status {
   PUBLISHED = 'PUBLISHED',
   HIDDEN = 'HIDDEN',
@@ -50,11 +55,14 @@ export class GuidesAndBooks {
   @Prop({ type: Object, default: { ru: '', uk: '' } })
   description: Description;
 
-  @Prop({ type: String, default: '' })
-  video: string;
+  @Prop({ type: Object, default: { video: '', playlist: '' } })
+  video: GuidesAndBooksVideo;
 
   @Prop({ type: String, default: '' })
   cover: string;
+
+  @Prop({ type: String, default: '' })
+  link: string;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,

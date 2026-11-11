@@ -181,6 +181,7 @@ export class ProductPurchaseService {
             localField: 'productId',
             foreignField: '_id',
             as: 'meditation',
+            pipeline: [{ $match: { toDelete: false } }],
           },
         },
         {
@@ -189,6 +190,7 @@ export class ProductPurchaseService {
             localField: 'productId',
             foreignField: '_id',
             as: 'webinar',
+            pipeline: [{ $match: { toDelete: false } }],
           },
         },
         {
@@ -197,6 +199,7 @@ export class ProductPurchaseService {
             localField: 'productId',
             foreignField: '_id',
             as: 'guide',
+            pipeline: [{ $match: { toDelete: false } }],
           },
         },
         {
@@ -229,6 +232,11 @@ export class ProductPurchaseService {
                 },
               ],
             },
+          },
+        },
+        {
+          $match: {
+            product: { $ne: null },
           },
         },
         {

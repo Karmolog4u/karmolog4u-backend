@@ -22,6 +22,11 @@ export class DetailsDescription {
   ru: string;
   uk: string;
 }
+
+export class WebinarVideo {
+  video: string;
+  playlist: string;
+}
 export enum Status {
   PUBLISHED = 'PUBLISHED',
   HIDDEN = 'HIDDEN',
@@ -64,8 +69,8 @@ export class Webinar {
   @Prop({ type: Object, default: { ru: '', uk: '' } })
   detailsDescription: DetailsDescription;
 
-  @Prop({ type: String, default: '' })
-  video: string;
+  @Prop({ type: Object, default: { video: '', playlist: '' } })
+  video: WebinarVideo;
 
   @Prop({ type: String, default: '' })
   cover: string;

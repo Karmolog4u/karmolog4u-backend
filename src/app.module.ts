@@ -68,11 +68,6 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
     EventsModule,
     PublicEducation,
     SendApplicationModule,
-    // ProductPurchaseModule,
-    // ServeStaticModule.forRoot({
-    //   rootPath: 'covers',
-    //   serveRoot: '/covers', // Optional: URL prefix for accessing the files
-    // }),
   ],
 })
 export class AppModule implements NestModule, OnModuleInit {

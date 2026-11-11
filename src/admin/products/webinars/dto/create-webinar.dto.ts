@@ -4,6 +4,7 @@ import {
   Description,
   DetailsDescription,
   DetailsTitle,
+  WebinarVideo,
   Name,
   Status,
 } from '../schemas/webinars.schema';
@@ -51,12 +52,12 @@ export class CreateWebinarDto {
   detailsDescription?: DetailsDescription;
 
   @ApiProperty({
-    type: String,
-    example: 'some link',
+    type: WebinarVideo,
+    example: { video: 'video link', playlist: 'playlist link' },
     description: 'Video of the meditation',
     required: false,
   })
-  video?: string;
+  video?: WebinarVideo;
 
   @ApiProperty({
     type: Number,

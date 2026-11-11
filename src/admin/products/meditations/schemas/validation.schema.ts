@@ -42,9 +42,17 @@ export const newMeditationSchema = Joi.object()
       })
       .optional()
       .unknown(false),
-    video: Joi.string().optional().messages({
-      'string.base': 'video має бути рядком',
-    }),
+    video: Joi.object()
+      .keys({
+        video: Joi.string().allow('').optional().messages({
+          'string.base': 'video.video має бути рядком',
+        }),
+        playlist: Joi.string().allow('').optional().messages({
+          'string.base': 'video.playlist має бути рядком',
+        }),
+      })
+      .optional()
+      .unknown(false),
     cover: Joi.string().optional().messages({
       'string.base': 'cover має бути рядком',
     }),
@@ -115,9 +123,17 @@ export const updateMeditationSchema = Joi.object()
       })
       .optional()
       .unknown(false),
-    video: Joi.string().optional().messages({
-      'string.base': 'video має бути рядком',
-    }),
+    video: Joi.object()
+      .keys({
+        video: Joi.string().allow('').optional().messages({
+          'string.base': 'video.video має бути рядком',
+        }),
+        playlist: Joi.string().allow('').optional().messages({
+          'string.base': 'video.playlist має бути рядком',
+        }),
+      })
+      .optional()
+      .unknown(false),
     cover: Joi.string().optional().messages({
       'string.base': 'cover має бути рядком',
     }),

@@ -1,6 +1,7 @@
 import {
   Category,
   Description,
+  MeditationVideo,
   Name,
   Status,
 } from '../schemas/meditation.schema';
@@ -42,12 +43,12 @@ export class MeditationEntity {
   description: Description;
 
   @ApiProperty({
-    type: String,
-    example: 'some link',
+    type: MeditationVideo,
+    example: { video: 'video link', playlist: 'playlist link' },
     description: 'Video of the meditation',
     required: false,
   })
-  video?: string;
+  video?: MeditationVideo;
 
   @ApiProperty({
     type: Number,

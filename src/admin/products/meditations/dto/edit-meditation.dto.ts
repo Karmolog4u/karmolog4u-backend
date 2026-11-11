@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   Category,
   Description,
+  MeditationVideo,
   Name,
   Status,
 } from 'src/products/meditations/schemas/meditation.schema';
@@ -33,12 +34,12 @@ export class EditMeditationDto {
   description?: Description;
 
   @ApiProperty({
-    type: String,
-    example: 'some link',
+    type: MeditationVideo,
+    example: { video: 'video link', playlist: 'playlist link' },
     description: 'Video of the meditation',
     required: false,
   })
-  video?: string;
+  video?: MeditationVideo;
 
   @ApiProperty({
     type: Number,

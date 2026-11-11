@@ -5,8 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { Discount } from '../discount/schemas/discount.schema';
+import { Model } from 'mongoose';
 import { IdDto } from 'src/common/dto/id.dto';
 import { ResponseSuccessDto } from 'src/common/dto/response-success.dto';
 import { GuidesAndBooks } from './schemas/guides_and_books.schema';
@@ -16,6 +15,8 @@ import { StorageService } from 'src/storage/storage.service';
 import { attachTargetToFiles } from 'src/common/helper/attachTargetToFiles';
 import { FilesService } from 'src/files/files.service';
 import { getDifference } from 'src/common/helper/getDifferenceArray';
+import { getYoutubeVideoId } from 'src/common/helper/getYoutubeVideoId';
+import { PUBLISHED } from 'src/common/helper/consts';
 
 @Injectable()
 export class AdminGuidesAndBooksService {
@@ -24,7 +25,6 @@ export class AdminGuidesAndBooksService {
     private guidesAndBooksModel: Model<GuidesAndBooks>,
     private readonly storageService: StorageService,
     private readonly filesService: FilesService,
-    @InjectModel(Discount.name) private discountModel: Model<Discount>,
   ) {}
 
   async getGuidesAndBooksCount(): Promise<number> {
@@ -82,6 +82,7 @@ export class AdminGuidesAndBooksService {
               category: 1,
               status: 1,
               name: 1,
+              link: 1,
               discount: {
                 $cond: {
                   if: { $ne: ['$discount', null] }, // Якщо discount не дорівнює null
@@ -172,6 +173,7 @@ export class AdminGuidesAndBooksService {
               name: 1,
               description: 1,
               video: 1,
+              link: 1,
               cover: 1,
               price: 1,
               isWaiting: 1,
@@ -201,6 +203,16 @@ export class AdminGuidesAndBooksService {
     guidesAndBooksData: any,
   ): Promise<GuidesAndBooksEntity> {
     try {
+      if (
+        guidesAndBooksData?.video?.playlist &&
+        !guidesAndBooksData?.video?.video
+      ) {
+        const video = await getYoutubeVideoId(
+          guidesAndBooksData.video.playlist,
+        );
+        guidesAndBooksData.video.video = video.video;
+      }
+
       const { file, ...guides } = guidesAndBooksData;
       const newGuidesAndBooks = new this.guidesAndBooksModel(guides);
       await newGuidesAndBooks.save();
@@ -215,7 +227,6 @@ export class AdminGuidesAndBooksService {
       const updateData: Record<string, any> = {};
 
       if (file) {
-
         //check exist
         const existingFiles = await this.storageService.filterExistingFiles([
           file,
@@ -266,6 +277,15 @@ export class AdminGuidesAndBooksService {
     guidesAndBooksId: IdDto,
   ): Promise<any> {
     try {
+      if (
+        guidesAndBooksData?.video?.playlist &&
+        !guidesAndBooksData?.video?.video
+      ) {
+        const video = await getYoutubeVideoId(
+          guidesAndBooksData.video.playlist,
+        );
+        guidesAndBooksData.video.video = video.video;
+      }
       const { file, ...guides } = guidesAndBooksData;
 
       const oldGuide = await this.guidesAndBooksModel
@@ -275,9 +295,7 @@ export class AdminGuidesAndBooksService {
         throw new NotFoundException('Гайд не знайдено :(');
       }
 
-      const updateData: Record<string, any> = {
-        file: Types.ObjectId,
-      }; // Store all updates
+      const updateData: Record<string, any> = {};
 
       await this.guidesAndBooksModel.findByIdAndUpdate(
         guidesAndBooksId,
@@ -288,9 +306,13 @@ export class AdminGuidesAndBooksService {
         },
       );
 
-      const oldFiles = await this.filesService.getFilesByIds([oldGuide.file]);
-
-      const differenceFiles = getDifference(oldFiles, [file]);
+      const hasNewFile = Boolean(file && typeof file === 'object' && file.path);
+      const oldFiles = oldGuide.file
+        ? await this.filesService.getFilesByIds([oldGuide.file])
+        : [];
+      const differenceFiles = hasNewFile
+        ? getDifference(oldFiles ?? [], [file])
+        : { onlyInArr1: [], onlyInArr2: [], inBoth: [] };
 
       // if (differenceHomeworkFiles.inBoth.length != 0) {
       //   const oldFilesIds = differenceHomeworkFiles.inBoth.map((item) =>
@@ -300,7 +322,7 @@ export class AdminGuidesAndBooksService {
       //   updateData.homeworkFiles = [...oldFilesIds];
       // }
 
-      if (differenceFiles.onlyInArr1.length != 0) {
+      if (hasNewFile && differenceFiles.onlyInArr1.length != 0) {
         //delete from storage
         await this.storageService.deleteFiles(
           this.storageService.getStoragePath(),
@@ -314,7 +336,7 @@ export class AdminGuidesAndBooksService {
       }
 
       //add files to lesson folder if exist
-      if (differenceFiles.onlyInArr2.length != 0) {
+      if (hasNewFile && differenceFiles.onlyInArr2.length != 0) {
         const existingFiles = await this.storageService.filterExistingFiles(
           differenceFiles.onlyInArr2,
         );
@@ -388,6 +410,29 @@ export class AdminGuidesAndBooksService {
     status: ChangeStatusGuidesAndBooksDto,
   ): Promise<ResponseSuccessDto> {
     try {
+      if (status.status === PUBLISHED) {
+        const guide = await this.guidesAndBooksModel
+          .findById(guidesAndBooksId)
+          .select('video.video link file')
+          .lean();
+
+        if (!guide) {
+          throw new NotFoundException('Гайд або книга не знайдені');
+        }
+
+        const files = await this.filesService.getFiles(
+          'GuidesAndBooks',
+          guidesAndBooksId,
+        );
+        const hasFile = (files?.length ?? 0) > 0;
+
+        if (!guide.video?.video?.trim() && !guide.link?.trim() && !hasFile) {
+          throw new BadRequestException(
+            'Неможливо змінити статус на Опубліковано без файлу або посилання',
+          );
+        }
+      }
+
       await this.guidesAndBooksModel.findOneAndUpdate(
         { _id: guidesAndBooksId },
         { $set: { ...status } },
@@ -395,6 +440,12 @@ export class AdminGuidesAndBooksService {
       );
       return { message: 'Успішно' };
     } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
       throw new BadRequestException(error._message + ', Mongo DB');
     }
   }
@@ -412,6 +463,7 @@ export class AdminGuidesAndBooksService {
           $project: {
             id: '$_id',
             name: '$name.uk',
+            link: 1,
             targetModule: {
               $literal: 'GuidesAndBooks',
             },

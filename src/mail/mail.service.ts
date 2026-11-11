@@ -42,8 +42,6 @@ export class MailService {
 
       const html = compiledTemplate(context);
 
-      console.log('html: ', html);
-
       const attachments = attachment
         ? [
             {

@@ -26,10 +26,10 @@ export const newWebinarSchema = Joi.object()
       .unknown(false),
     description: Joi.object()
       .keys({
-        ru: Joi.string().optional().messages({
+        ru: Joi.string().allow('').optional().messages({
           'string.base': 'ru має бути рядком',
         }),
-        uk: Joi.string().optional().messages({
+        uk: Joi.string().allow('').optional().messages({
           'string.base': 'uk має бути рядком',
         }),
       })
@@ -60,10 +60,18 @@ export const newWebinarSchema = Joi.object()
     isWaiting: Joi.bool().optional().messages({
       'bool.base': 'isWaiting має бути рядком',
     }),
-    video: Joi.string().required().messages({
-      'string.base': 'video має бути рядком',
-      'any.required': "video є обов'язковим полем",
-    }),
+    video: Joi.object()
+      .keys({
+        video: Joi.string().allow('').optional().messages({
+          'string.base': 'video.video має бути рядком',
+        }),
+        playlist: Joi.string().allow('').optional().messages({
+          'string.base': 'video.playlist має бути рядком',
+        }),
+      })
+      .required()
+      .messages({ 'any.required': "video є обов'язковим полем" })
+      .unknown(false),
     cover: Joi.string().optional().messages({
       'string.base': 'cover має бути рядком',
     }),
@@ -118,10 +126,10 @@ export const updateWebinarSchema = Joi.object()
       .unknown(false),
     description: Joi.object()
       .keys({
-        ru: Joi.string().optional().messages({
+        ru: Joi.string().allow('').optional().messages({
           'string.base': 'ru має бути рядком',
         }),
-        uk: Joi.string().optional().messages({
+        uk: Joi.string().allow('').optional().messages({
           'string.base': 'uk має бути рядком',
         }),
       })
@@ -152,9 +160,17 @@ export const updateWebinarSchema = Joi.object()
     isWaiting: Joi.bool().optional().messages({
       'bool.base': 'isWaiting має бути рядком',
     }),
-    video: Joi.string().optional().messages({
-      'string.base': 'video має бути рядком',
-    }),
+    video: Joi.object()
+      .keys({
+        video: Joi.string().allow('').optional().messages({
+          'string.base': 'video.video має бути рядком',
+        }),
+        playlist: Joi.string().allow('').optional().messages({
+          'string.base': 'video.playlist має бути рядком',
+        }),
+      })
+      .optional()
+      .unknown(false),
     cover: Joi.string().optional().messages({
       'string.base': 'cover має бути рядком',
     }),
