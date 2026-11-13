@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
+import { PUBLISHED, DRAFT, HIDDEN } from 'src/common/helper/consts';
 
 export type GuidesAndBooksDocument = HydratedDocument<GuidesAndBooks>;
 
@@ -18,11 +19,13 @@ export class GuidesAndBooksVideo {
   playlist: string;
 }
 
-export enum Status {
-  PUBLISHED = 'PUBLISHED',
-  HIDDEN = 'HIDDEN',
-  DRAFT = 'DRAFT',
-}
+export const Status = {
+  PUBLISHED,
+  HIDDEN,
+  DRAFT,
+} as const;
+
+export type Status = (typeof Status)[keyof typeof Status];
 
 export enum CategoryGuidesAndBooks {
   GUIDES = 'GUIDES',
@@ -81,8 +84,8 @@ export class GuidesAndBooks {
 
   @Prop({
     type: String,
-    enum: ['PUBLISHED', 'HIDDEN', 'DRAFT'],
-    default: 'DRAFT',
+    enum: Object.values(Status),
+    default: Status.DRAFT,
     required: [true, 'Status is required'],
   })
   status: Status;

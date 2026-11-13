@@ -77,6 +77,7 @@ export class AdminWebinarsService {
               category: 1,
               status: 1,
               name: 1,
+              cover: 1,
               discount: {
                 $cond: {
                   if: { $ne: ['$discount', null] }, // Якщо discount не дорівнює null
@@ -261,7 +262,7 @@ export class AdminWebinarsService {
         {
           $match: {
             toDelete: false,
-            status: 'PUBLISHED',
+            status: PUBLISHED,
           },
         },
         {

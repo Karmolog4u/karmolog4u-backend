@@ -3,7 +3,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Discount } from 'src/admin/products/discount/schemas/discount.schema';
 import { WebinarEntity } from 'src/admin/products/webinars/dto/webinar-entity.dto';
-import { Webinar } from 'src/admin/products/webinars/schemas/webinars.schema';
+import {
+  CategoryWebinar,
+  Status,
+  Webinar,
+} from 'src/admin/products/webinars/schemas/webinars.schema';
 import { IdDto } from 'src/common/dto/id.dto';
 
 @Injectable()
@@ -20,14 +24,20 @@ export class WebinarService {
         {
           $match: {
             toDelete: false,
-            status: 'PUBLISHED',
+            status: Status.PUBLISHED,
           },
         },
         // Перевірка поля category і виконання відповідної логіки
         {
           $facet: {
             webinars: [
-              { $match: { category: 'WEBINARS' } },
+              {
+                $match: {
+                  category: {
+                    $in: [CategoryWebinar.WEBINARS, CategoryWebinar.TRAINING],
+                  },
+                },
+              },
               {
                 $lookup: {
                   from: 'discounts', // Колекція знижок
@@ -70,6 +80,7 @@ export class WebinarService {
                 $project: {
                   _id: 0,
                   id: '$_id',
+                  updatedAt: 1,
                   category: 1,
                   status: 1,
                   name: 1,
@@ -86,7 +97,7 @@ export class WebinarService {
               },
             ],
             ethers: [
-              { $match: { category: 'ETHERS' } },
+              { $match: { category: CategoryWebinar.ETHERS } },
               {
                 $project: {
                   category: 1,
@@ -94,6 +105,7 @@ export class WebinarService {
                   video: 1,
                   _id: 0,
                   id: '$_id',
+                  updatedAt: 1,
                 },
               },
             ],
@@ -108,13 +120,12 @@ export class WebinarService {
         // Розгортання результату в один масив
         { $unwind: '$result' },
         { $replaceRoot: { newRoot: '$result' } },
+        { $sort: { updatedAt: -1 } },
+        { $project: { updatedAt: 0 } },
       ])
       .exec();
 
-    if (response.length == 0) {
-      throw new NotFoundException('Вебінари не знайдено');
-    }
-    return response;
+    return response.length === 0 ? [] : response;
   }
 
   async findWebinarById(webinarId: IdDto): Promise<WebinarEntity> {
@@ -125,8 +136,10 @@ export class WebinarService {
           $match: {
             _id: webinarId,
             toDelete: false,
-            status: 'PUBLISHED',
-            category: 'WEBINARS',
+            status: Status.PUBLISHED,
+            category: {
+              $in: [CategoryWebinar.WEBINARS, CategoryWebinar.TRAINING],
+            },
           },
         },
         {

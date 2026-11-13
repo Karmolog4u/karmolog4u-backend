@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { GuidesAndBooks } from 'src/admin/products/guides_and_books/schemas/guides_and_books.schema';
+import { GuidesAndBooks, Status } from 'src/admin/products/guides_and_books/schemas/guides_and_books.schema';
 
 @Injectable()
 export class GuidesAndBooksService {
@@ -16,9 +16,10 @@ export class GuidesAndBooksService {
         {
           $match: {
             toDelete: false,
-            status: 'PUBLISHED',
+            status: Status.PUBLISHED,
           },
         },
+        { $sort: { updatedAt: -1 } },
         {
           $lookup: {
             from: 'discounts',
@@ -89,7 +90,7 @@ export class GuidesAndBooksService {
         {
           $match: {
             _id: new Types.ObjectId(id),
-            status: 'PUBLISHED',
+            status: Status.PUBLISHED,
             toDelete: false,
           },
         },

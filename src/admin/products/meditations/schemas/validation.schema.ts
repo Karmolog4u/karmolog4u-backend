@@ -1,16 +1,16 @@
 import * as Joi from 'joi';
+import { Category, Status } from 'src/products/meditations/schemas/meditation.schema';
 
 export const newMeditationSchema = Joi.object()
   .keys({
     category: Joi.string()
-      .valid('OPENED', 'CLOSED', 'ARCANES')
+      .valid(...Object.values(Category))
       .required()
       .messages({
         'any.required': "category є обов'язковим полем",
         'string.base': 'category має бути рядком',
         'string.empty': 'category не може бути порожнім',
-        'any.only':
-          'category має бути одним з таких значень: OPENED, CLOSED, ARCANES',
+        'any.only': 'category has an invalid value',
       }),
     name: Joi.object()
       .keys({
@@ -60,14 +60,13 @@ export const newMeditationSchema = Joi.object()
       'number.base': 'price має бути числом',
     }),
     status: Joi.string()
-      .valid('DRAFT', 'HIDDEN', 'PUBLISHED')
+      .valid(...Object.values(Status))
       .required()
       .messages({
         'any.required': "status є обов'язковим полем",
         'string.base': 'status має бути рядком',
         'string.empty': 'status не може бути порожнім',
-        'any.only':
-          'status має бути одним з таких значень: DRAFT, HIDDEN, PUBLISHED',
+        'any.only': 'status has an invalid value',
       }),
     discount: Joi.object()
       .keys({
@@ -89,14 +88,13 @@ export const newMeditationSchema = Joi.object()
 export const updateMeditationSchema = Joi.object()
   .keys({
     category: Joi.string()
-      .valid('OPENED', 'CLOSED', 'ARCANES')
+      .valid(...Object.values(Category))
       .required()
       .messages({
         'any.required': "category є обов'язковим полем",
         'string.base': 'category має бути рядком',
         'string.empty': 'category не може бути порожнім',
-        'any.only':
-          'category має бути одним з таких значень: OPENED, CLOSED, ARCANES',
+        'any.only': 'category has an invalid value',
       }),
     name: Joi.object()
       .keys({
@@ -141,14 +139,13 @@ export const updateMeditationSchema = Joi.object()
       'number.base': 'price має бути числом',
     }),
     status: Joi.string()
-      .valid('DRAFT', 'HIDDEN', 'PUBLISHED')
+      .valid(...Object.values(Status))
       .required()
       .messages({
         'any.required': "status є обов'язковим полем",
         'string.base': 'status має бути рядком',
         'string.empty': 'status не може бути порожнім',
-        'any.only':
-          'status має бути одним з таких значень: DRAFT, HIDDEN, PUBLISHED',
+        'any.only': 'status has an invalid value',
       }),
     discount: Joi.object()
       .keys({
@@ -170,14 +167,13 @@ export const updateMeditationSchema = Joi.object()
 export const changeStatusMeditationSchema = Joi.object()
   .keys({
     status: Joi.string()
-      .valid('DRAFT', 'HIDDEN', 'PUBLISHED')
+      .valid(...Object.values(Status))
       .required()
       .messages({
         'any.required': "status є обов'язковим полем",
         'string.base': 'status має бути рядком',
         'string.empty': 'status не може бути порожнім',
-        'any.only':
-          'status має бути одним з таких значень: DRAFT, HIDDEN, PUBLISHED',
+        'any.only': 'status has an invalid value',
       }),
   })
   .unknown(false);

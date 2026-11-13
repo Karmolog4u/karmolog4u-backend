@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Meditation } from './schemas/meditation.schema';
+import { Category, Meditation, Status } from './schemas/meditation.schema';
 import { Model, Types } from 'mongoose';
 
 @Injectable()
@@ -15,9 +15,10 @@ export class MeditationService {
         {
           $match: {
             toDelete: false,
-            status: 'PUBLISHED', // Виключаємо документи, де toDelete = false
+            status: Status.PUBLISHED, // Виключаємо документи, де toDelete = false
           },
         },
+        { $sort: { updatedAt: -1 } },
         {
           $lookup: {
             from: 'discounts',
@@ -74,7 +75,7 @@ export class MeditationService {
             },
             video: {
               $cond: {
-                if: { $eq: ['$category', 'ARCANES'] },
+                if: { $eq: ['$category', Category.ARCANES] },
                 then: '$video',
                 else: '$$REMOVE',
               },
@@ -95,7 +96,7 @@ export class MeditationService {
         {
           $match: {
             _id: new Types.ObjectId(meditationId),
-            status: 'PUBLISHED',
+            status: Status.PUBLISHED,
             toDelete: false,
           },
         },
@@ -154,7 +155,7 @@ export class MeditationService {
             isWaiting: 1,
             video: {
               $cond: {
-                if: { $eq: ['$category', 'OPENED'] },
+                if: { $eq: ['$category', Category.OPENED] },
                 then: '$video',
                 else: '$$REMOVE',
               },

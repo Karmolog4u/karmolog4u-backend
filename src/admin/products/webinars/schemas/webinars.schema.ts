@@ -1,5 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import {
+  WEBINARS,
+  ETHERS,
+  TRAINING,
+  PUBLISHED,
+  HIDDEN,
+  DRAFT,
+} from 'src/common/helper/consts';
 
 export type WebinarDocument = HydratedDocument<Webinar>;
 
@@ -27,16 +35,22 @@ export class WebinarVideo {
   video: string;
   playlist: string;
 }
-export enum Status {
-  PUBLISHED = 'PUBLISHED',
-  HIDDEN = 'HIDDEN',
-  DRAFT = 'DRAFT',
-}
+export const Status = {
+  PUBLISHED,
+  HIDDEN,
+  DRAFT,
+} as const;
 
-export enum CategoryWebinar {
-  WEBINARS = 'WEBINARS',
-  ETHERS = 'ETHERS',
-}
+export type Status = (typeof Status)[keyof typeof Status];
+
+export const CategoryWebinar = {
+  WEBINARS,
+  ETHERS,
+  TRAINING,
+} as const;
+
+export type CategoryWebinar =
+  (typeof CategoryWebinar)[keyof typeof CategoryWebinar];
 
 @Schema({
   timestamps: true,
@@ -52,7 +66,7 @@ export enum CategoryWebinar {
 export class Webinar {
   @Prop({
     type: String,
-    enum: ['WEBINARS', 'ETHERS'],
+    enum: Object.values(CategoryWebinar),
     required: [true, 'Category is required'],
   })
   category: CategoryWebinar;
@@ -86,8 +100,8 @@ export class Webinar {
 
   @Prop({
     type: String,
-    enum: ['PUBLISHED', 'HIDDEN', 'DRAFT'],
-    default: 'DRAFT',
+    enum: Object.values(Status),
+    default: Status.DRAFT,
     required: [true, 'Status is required'],
   })
   status: Status;

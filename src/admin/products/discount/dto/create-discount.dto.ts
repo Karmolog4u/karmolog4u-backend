@@ -2,8 +2,8 @@ import { Types } from 'mongoose';
 
 export class CreateDiscountDto {
   /**
-  Discount
-  @example "10"
+  Fixed discount amount in the product currency
+  @example "8"
   */
   discount: number;
   /**

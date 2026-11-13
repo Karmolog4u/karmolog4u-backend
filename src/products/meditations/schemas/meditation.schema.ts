@@ -1,5 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import { PUBLISHED, DRAFT, HIDDEN } from 'src/common/helper/consts';
+import { ARCANES, CLOSED_MEDITATIONS, OPENED_MEDITATIONS } from 'src/common/helper/consts';
 // import * as mongoose from 'mongoose';
 
 export type MeditationDocument = HydratedDocument<Meditation>;
@@ -19,17 +21,21 @@ export class MeditationVideo {
   playlist: string;
 }
 
-export enum Status {
-  PUBLISHED = 'PUBLISHED',
-  HIDDEN = 'HIDDEN',
-  DRAFT = 'DRAFT',
-}
+export const Status = {
+  PUBLISHED,
+  HIDDEN,
+  DRAFT,
+} as const;
 
-export enum Category {
-  OPENED = 'OPENED',
-  CLOSED = 'CLOSED',
-  ARCANES = 'ARCANES',
-}
+export type Status = (typeof Status)[keyof typeof Status];
+
+export const Category = {
+  OPENED: OPENED_MEDITATIONS,
+  CLOSED: CLOSED_MEDITATIONS,
+  ARCANES,
+} as const;
+
+export type Category = (typeof Category)[keyof typeof Category];
 
 @Schema({
   timestamps: true,
@@ -45,7 +51,7 @@ export enum Category {
 export class Meditation {
   @Prop({
     type: String,
-    enum: ['OPENED', 'CLOSED', 'ARCANES'],
+    enum: Object.values(Category),
     required: [true, 'Category is required'],
   })
   category: Category;
@@ -73,8 +79,8 @@ export class Meditation {
 
   @Prop({
     type: String,
-    enum: ['PUBLISHED', 'HIDDEN', 'DRAFT'],
-    default: 'DRAFT',
+    enum: Object.values(Status),
+    default: Status.DRAFT,
     required: [true, 'Status is required'],
   })
   status: Status;

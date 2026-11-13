@@ -1,9 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Webinar } from 'src/admin/products/webinars/schemas/webinars.schema';
-import { GuidesAndBooks } from 'src/admin/products/guides_and_books/schemas/guides_and_books.schema';
-import { Meditation } from './meditations/schemas/meditation.schema';
+import {
+  Status as WebinarStatus,
+  Webinar,
+} from 'src/admin/products/webinars/schemas/webinars.schema';
+import {
+  GuidesAndBooks,
+  Status as GuidesAndBooksStatus,
+} from 'src/admin/products/guides_and_books/schemas/guides_and_books.schema';
+import {
+  Meditation,
+  Status as MeditationStatus,
+} from './meditations/schemas/meditation.schema';
 import { GiftService } from './gifts/gift.service';
 
 @Injectable()
@@ -51,7 +60,7 @@ export class ProductService {
         {
           $match: {
             price: { $exists: true, $gt: 0 },
-            status: 'PUBLISHED',
+            status: MeditationStatus.PUBLISHED,
             toDelete: false,
           },
         },
@@ -100,7 +109,7 @@ export class ProductService {
         {
           $match: {
             price: { $exists: true, $gt: 0 },
-            status: 'PUBLISHED',
+            status: WebinarStatus.PUBLISHED,
             toDelete: false,
           },
         },
@@ -148,7 +157,7 @@ export class ProductService {
         {
           $match: {
             price: { $exists: true, $gt: 0 },
-            status: 'PUBLISHED',
+            status: GuidesAndBooksStatus.PUBLISHED,
             toDelete: false,
           },
         },

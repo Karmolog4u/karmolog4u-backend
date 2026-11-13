@@ -1,4 +1,5 @@
 import * as Joi from 'joi';
+import { Status } from './gift.schema';
 
 export const newGiftSchema = Joi.object()
   .keys({
@@ -39,14 +40,13 @@ export const newGiftSchema = Joi.object()
       'number.base': 'price має бути числом',
     }),
     status: Joi.string()
-      .valid('DRAFT', 'HIDDEN', 'PUBLISHED')
+      .valid(...Object.values(Status))
       .required()
       .messages({
         'any.required': "status є обов'язковим полем",
         'string.base': 'status має бути рядком',
         'string.empty': 'status не може бути порожнім',
-        'any.only':
-          'status має бути одним з таких значень: DRAFT, HIDDEN, PUBLISHED',
+        'any.only': 'status has an invalid value',
       }),
     discount: Joi.object()
       .keys({
@@ -102,14 +102,13 @@ export const updateGiftSchema = Joi.object()
       'number.base': 'price має бути числом',
     }),
     status: Joi.string()
-      .valid('DRAFT', 'HIDDEN', 'PUBLISHED')
+      .valid(...Object.values(Status))
       .required()
       .messages({
         'any.required': "status є обов'язковим полем",
         'string.base': 'status має бути рядком',
         'string.empty': 'status не може бути порожнім',
-        'any.only':
-          'status має бути одним з таких значень: DRAFT, HIDDEN, PUBLISHED',
+        'any.only': 'status has an invalid value',
       }),
     discount: Joi.object()
       .keys({
@@ -131,14 +130,13 @@ export const updateGiftSchema = Joi.object()
 export const changeStatusGiftSchema = Joi.object()
   .keys({
     status: Joi.string()
-      .valid('DRAFT', 'HIDDEN', 'PUBLISHED')
+      .valid(...Object.values(Status))
       .required()
       .messages({
         'any.required': "status є обов'язковим полем",
         'string.base': 'status має бути рядком',
         'string.empty': 'status не може бути порожнім',
-        'any.only':
-          'status має бути одним з таких значень: DRAFT, HIDDEN, PUBLISHED',
+        'any.only': 'status has an invalid value',
       }),
   })
   .unknown(false);

@@ -1,4 +1,5 @@
 import * as Joi from 'joi';
+import { Status } from './guides_and_books.schema';
 
 export const newGuidesAndBooksSchema = Joi.object()
   .keys({
@@ -71,14 +72,13 @@ export const newGuidesAndBooksSchema = Joi.object()
     }),
 
     status: Joi.string()
-      .valid('DRAFT', 'HIDDEN', 'PUBLISHED')
+      .valid(...Object.values(Status))
       .required()
       .messages({
         'any.required': "status є обов'язковим полем",
         'string.base': 'status має бути рядком',
         'string.empty': 'status не може бути порожнім',
-        'any.only':
-          'status має бути одним з таких значень: DRAFT, HIDDEN, PUBLISHED',
+        'any.only': 'status has an invalid value',
       }),
 
     discount: Joi.object()
@@ -175,14 +175,13 @@ export const updateGuidesAndBooksSchema = Joi.object()
       'number.base': 'price має бути числом',
     }),
     status: Joi.string()
-      .valid('DRAFT', 'HIDDEN', 'PUBLISHED')
+      .valid(...Object.values(Status))
       .required()
       .messages({
         'any.required': "status є обов'язковим полем",
         'string.base': 'status має бути рядком',
         'string.empty': 'status не може бути порожнім',
-        'any.only':
-          'status має бути одним з таких значень: DRAFT, HIDDEN, PUBLISHED',
+        'any.only': 'status has an invalid value',
       }),
     discount: Joi.object()
       .keys({
@@ -219,14 +218,13 @@ export const updateGuidesAndBooksSchema = Joi.object()
 export const changeStatusGuidesAndBooksSchema = Joi.object()
   .keys({
     status: Joi.string()
-      .valid('DRAFT', 'HIDDEN', 'PUBLISHED')
+      .valid(...Object.values(Status))
       .required()
       .messages({
         'any.required': "status є обов'язковим полем",
         'string.base': 'status має бути рядком',
         'string.empty': 'status не може бути порожнім',
-        'any.only':
-          'status має бути одним з таких значень: DRAFT, HIDDEN, PUBLISHED',
+        'any.only': 'status has an invalid value',
       }),
   })
   .unknown(false);

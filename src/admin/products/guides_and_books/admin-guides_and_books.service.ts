@@ -456,7 +456,7 @@ export class AdminGuidesAndBooksService {
         {
           $match: {
             toDelete: false,
-            status: 'PUBLISHED',
+            status: PUBLISHED,
           },
         },
         {

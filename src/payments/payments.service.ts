@@ -115,7 +115,7 @@ export class PaymentsService {
       now <= new Date(discount.expiredAt).getTime();
 
     if (isUseDiscount) {
-      amount = product.price - (product.price * discount.discount) / 100;
+      amount = product.price - discount.discount;
     }
 
     const promocode = dto.promocode;
@@ -247,7 +247,7 @@ export class PaymentsService {
       now <= new Date(discount.expiredAt).getTime();
 
     if (isUseDiscount) {
-      amount = product.price - (product.price * discount.discount) / 100;
+      amount = product.price - discount.discount;
     }
 
     const promocode = data.promocode;

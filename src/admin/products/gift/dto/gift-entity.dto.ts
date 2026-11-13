@@ -54,7 +54,7 @@ export class GiftEntity {
 
   @ApiProperty({
     type: Object,
-    description: 'Discount of the meditation',
+    description: 'Discount amount in the product currency',
     example: {
       discount: 10,
       start: '2024-12-18T19:53:24.560Z',

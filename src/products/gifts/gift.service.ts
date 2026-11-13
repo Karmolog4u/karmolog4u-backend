@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Gift } from 'src/admin/products/gift/schemas/gift.schema';
+import { Gift, Status } from 'src/admin/products/gift/schemas/gift.schema';
 import { Model, Types } from 'mongoose';
 import { GiftEntity } from 'src/admin/products/gift/dto/gift-entity.dto';
 
@@ -17,9 +17,10 @@ export class GiftService {
         {
           $match: {
             toDelete: false,
-            status: 'PUBLISHED',
+            status: Status.PUBLISHED,
           },
         },
+        { $sort: { updatedAt: -1 } },
         {
           $lookup: {
             from: 'discounts',
@@ -88,7 +89,7 @@ export class GiftService {
           $match: {
             _id: new Types.ObjectId(id),
             toDelete: false,
-            status: 'PUBLISHED',
+            status: Status.PUBLISHED,
           },
         },
         {

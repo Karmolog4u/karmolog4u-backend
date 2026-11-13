@@ -1,13 +1,17 @@
 import * as Joi from 'joi';
+import { CategoryWebinar, Status } from './webinars.schema';
 
 export const newWebinarSchema = Joi.object()
   .keys({
-    category: Joi.string().valid('WEBINARS', 'ETHERS').required().messages({
-      'any.required': "category є обов'язковим полем",
-      'string.base': 'category має бути рядком',
-      'string.empty': 'category не може бути порожнім',
-      'any.only': 'category має бути одним з таких значень: WEBINARS, ETHERS',
-    }),
+    category: Joi.string()
+      .valid(...Object.values(CategoryWebinar))
+      .required()
+      .messages({
+        'any.required': "category є обов'язковим полем",
+        'string.base': 'category має бути рядком',
+        'string.empty': 'category не може бути порожнім',
+        'any.only': 'category has an invalid value',
+      }),
     name: Joi.object()
       .keys({
         ru: Joi.string().required().messages({
@@ -79,14 +83,13 @@ export const newWebinarSchema = Joi.object()
       'number.base': 'price має бути числом',
     }),
     status: Joi.string()
-      .valid('DRAFT', 'HIDDEN', 'PUBLISHED')
+      .valid(...Object.values(Status))
       .required()
       .messages({
         'any.required': "status є обов'язковим полем",
         'string.base': 'status має бути рядком',
         'string.empty': 'status не може бути порожнім',
-        'any.only':
-          'status має бути одним з таких значень: DRAFT, HIDDEN, PUBLISHED',
+        'any.only': 'status has an invalid value',
       }),
     discount: Joi.object()
       .keys({
@@ -107,12 +110,15 @@ export const newWebinarSchema = Joi.object()
 
 export const updateWebinarSchema = Joi.object()
   .keys({
-    category: Joi.string().valid('WEBINARS', 'ETHERS').required().messages({
-      'any.required': "category є обов'язковим полем",
-      'string.base': 'category має бути рядком',
-      'string.empty': 'category не може бути порожнім',
-      'any.only': 'category має бути одним з таких значень: WEBINARS, ETHERS',
-    }),
+    category: Joi.string()
+      .valid(...Object.values(CategoryWebinar))
+      .required()
+      .messages({
+        'any.required': "category є обов'язковим полем",
+        'string.base': 'category має бути рядком',
+        'string.empty': 'category не може бути порожнім',
+        'any.only': 'category has an invalid value',
+      }),
     name: Joi.object()
       .keys({
         ru: Joi.string().optional().messages({
@@ -178,14 +184,13 @@ export const updateWebinarSchema = Joi.object()
       'number.base': 'price має бути числом',
     }),
     status: Joi.string()
-      .valid('DRAFT', 'HIDDEN', 'PUBLISHED')
+      .valid(...Object.values(Status))
       .required()
       .messages({
         'any.required': "status є обов'язковим полем",
         'string.base': 'status має бути рядком',
         'string.empty': 'status не може бути порожнім',
-        'any.only':
-          'status має бути одним з таких значень: DRAFT, HIDDEN, PUBLISHED',
+        'any.only': 'status has an invalid value',
       }),
     discount: Joi.object()
       .keys({
@@ -207,14 +212,13 @@ export const updateWebinarSchema = Joi.object()
 export const changeStatusWebinarSchema = Joi.object()
   .keys({
     status: Joi.string()
-      .valid('DRAFT', 'HIDDEN', 'PUBLISHED')
+      .valid(...Object.values(Status))
       .required()
       .messages({
         'any.required': "status є обов'язковим полем",
         'string.base': 'status має бути рядком',
         'string.empty': 'status не може бути порожнім',
-        'any.only':
-          'status має бути одним з таких значень: DRAFT, HIDDEN, PUBLISHED',
+        'any.only': 'status has an invalid value',
       }),
   })
   .unknown(false);

@@ -22,6 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { JoiValidationPipe } from 'src/common/pipes/JoiValidationPipe';
 import { MeditationEntity } from 'src/products/meditations/dto/meditation-entity.dto';
+import { Category } from 'src/products/meditations/schemas/meditation.schema';
 import {
   changeStatusMeditationSchema,
   newMeditationSchema,
@@ -84,13 +85,12 @@ export class AdminMeditationController {
   ): Promise<ResponseSuccessDto> {
     try {
       const parsedData = parseFields(data);
-
       //validate data
       const { error } = newMeditationSchema.validate(parsedData);
       if (error) {
         throw new BadRequestException(error.details[0].message);
       }
-      if (file && parsedData.category !== 'ARCANES') {
+      if (file && parsedData.category !== Category.ARCANES) {
         const link = await fileCompress(file, this.configService);
         parsedData.cover = link;
       } else if (file) {
@@ -191,13 +191,14 @@ export class AdminMeditationController {
   ): Promise<any> {
     try {
       const parsedData = parseFields(data);
+
       const { error } = updateMeditationSchema.validate(parsedData);
       if (error) {
         throw new BadRequestException(error.details[0].message);
       }
       const meditationId = new mongoose.Types.ObjectId(id.toString());
 
-      if (file && parsedData.category !== 'ARCANES') {
+      if (file && parsedData.category !== Category.ARCANES) {
         const oldMeditation =
           await this.adminMeditationService.findMeditationById(meditationId);
         // const parsedUrl = new URL(oldMeditation.cover);

@@ -13,3 +13,13 @@ export const ARCHIVE = 'ARCHIVE';
 export const GUIDES = 'GUIDES';
 export const OTHER_GUIDES = 'OTHER_GUIDES';
 export const BOOKS = 'BOOKS';
+
+//webinars categories
+export const WEBINARS = 'WEBINARS';
+export const ETHERS = 'ETHERS';
+export const TRAINING = 'TRAINING';
+
+//meditation categories
+export const ARCANES = 'ARCANES';
+export const CLOSED_MEDITATIONS = 'CLOSED';
+export const OPENED_MEDITATIONS = 'OPENED';

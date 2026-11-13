@@ -44,8 +44,10 @@ import {
 } from './schemas/webinar-validation';
 import mongoose from 'mongoose';
 import { CreateWebinarDto } from './dto/create-webinar.dto';
+import { CreateWebinarResponseDto } from './dto/create-webinar-response.dto';
 import { EditWebinarDto } from './dto/edit-webinar.dto';
 import { getFileNameFromUrl } from 'src/common/helper/getFileNameFromUrl';
+import { CategoryWebinar } from './schemas/webinars.schema';
 
 @ApiBearerAuth()
 @ApiTags('admin-webinars')
@@ -71,7 +73,7 @@ export class AdminWebinarsController {
   @ApiResponse({
     status: 201,
     description: 'Успішно',
-    type: ResponseSuccessDto,
+    type: CreateWebinarResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Конфлікт створення вебінару' })
   @UseInterceptors(FileInterceptor('cover', multerOptions()))
@@ -80,7 +82,7 @@ export class AdminWebinarsController {
     data: CreateWebinarDto,
     @UploadedFile()
     file?: Express.Multer.File,
-  ): Promise<ResponseSuccessDto> {
+  ): Promise<CreateWebinarResponseDto> {
     try {
       const parsedData = parseFields(data);
 
@@ -89,28 +91,28 @@ export class AdminWebinarsController {
       if (error) {
         throw new BadRequestException(error.details[0].message);
       }
-      if (file && parsedData.category !== 'ETHERS') {
+      if (file && parsedData.category !== CategoryWebinar.ETHERS) {
         const link = await fileCompress(file, this.configService);
         parsedData.cover = link;
       } else if (file) {
         await fileDelete(file.path);
       }
 
+      let createdWebinar: WebinarEntity;
       if (parsedData.hasOwnProperty('discount')) {
         const { discount, ...webinar } = parsedData;
-        const newWebinar = await this.adminWebinarService.createWebinar(
-          webinar,
-        );
+        createdWebinar = await this.adminWebinarService.createWebinar(webinar);
         const discountData = {
           ...discount,
-          refId: newWebinar._id,
+          refId: createdWebinar._id,
         };
         await this.discountService.createDiscount(discountData);
-        return { message: 'Успішно' };
       } else {
-        await this.adminWebinarService.createWebinar(parsedData);
+        createdWebinar = await this.adminWebinarService.createWebinar(
+          parsedData,
+        );
       }
-      return { message: 'Успішно' };
+      return { message: 'Успішно', cover: createdWebinar.cover };
     } catch (error) {
       throw new HttpException(
         {
@@ -197,7 +199,7 @@ export class AdminWebinarsController {
       }
       const webinarId = new mongoose.Types.ObjectId(id.toString());
 
-      if (file && parsedData.category !== 'ETHERS') {
+      if (file && parsedData.category !== CategoryWebinar.ETHERS) {
         const oldWebinar = await this.adminWebinarService.findWebinarById(
           webinarId,
         );

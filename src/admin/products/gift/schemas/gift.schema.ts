@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import { PUBLISHED, DRAFT, HIDDEN } from 'src/common/helper/consts';
 
 export type GiftDocument = HydratedDocument<Gift>;
 
@@ -13,11 +14,13 @@ export class Description {
   uk: string;
 }
 
-export enum Status {
-  PUBLISHED = 'PUBLISHED',
-  HIDDEN = 'HIDDEN',
-  DRAFT = 'DRAFT',
-}
+export const Status = {
+  PUBLISHED,
+  HIDDEN,
+  DRAFT,
+} as const;
+
+export type Status = (typeof Status)[keyof typeof Status];
 
 @Schema({
   timestamps: true,
@@ -51,8 +54,8 @@ export class Gift {
 
   @Prop({
     type: String,
-    enum: ['PUBLISHED', 'HIDDEN', 'DRAFT'],
-    default: 'DRAFT',
+    enum: Object.values(Status),
+    default: Status.DRAFT,
     required: [true, 'Status is required'],
   })
   status: Status;
