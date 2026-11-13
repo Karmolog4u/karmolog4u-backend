@@ -196,6 +196,7 @@ export class DeletedService {
           { _id: { $in: webinars } },
           {
             $set: { toDelete: false },
+            $unset: { expiredAt: 1 },
           },
         );
       }
@@ -204,6 +205,7 @@ export class DeletedService {
           { _id: { $in: meditation } },
           {
             $set: { toDelete: false },
+            $unset: { expiredAt: 1 },
           },
         );
       }
@@ -212,14 +214,16 @@ export class DeletedService {
           { _id: { $in: guidesAndBooks } },
           {
             $set: { toDelete: false },
+            $unset: { expiredAt: 1 },
           },
         );
       }
       if (gifts.length !== 0) {
         await this.giftModel.updateMany(
-          { _id: { $in: guidesAndBooks } },
+          { _id: { $in: gifts } },
           {
             $set: { toDelete: false },
+            $unset: { expiredAt: 1 },
           },
         );
       }
@@ -261,6 +265,7 @@ export class DeletedService {
           { _id: { $in: webinars } },
           {
             $set: { toDelete: false },
+            $unset: { expiredAt: 1 },
           },
         );
         await this.promoCodeService.deleteByRefIdPromoCodes(webinars);
@@ -270,6 +275,7 @@ export class DeletedService {
           { _id: { $in: meditation } },
           {
             $set: { toDelete: false },
+            $unset: { expiredAt: 1 },
           },
         );
         await this.promoCodeService.deleteByRefIdPromoCodes(meditation);
@@ -279,6 +285,7 @@ export class DeletedService {
           { _id: { $in: guidesAndBooks } },
           {
             $set: { toDelete: false },
+            $unset: { expiredAt: 1 },
           },
         );
         await this.promoCodeService.deleteByRefIdPromoCodes(guidesAndBooks);
@@ -288,6 +295,7 @@ export class DeletedService {
           { _id: { $in: gifts } },
           {
             $set: { toDelete: false },
+            $unset: { expiredAt: 1 },
           },
         );
         await this.promoCodeService.deleteByRefIdPromoCodes(gifts);
