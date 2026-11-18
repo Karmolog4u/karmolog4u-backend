@@ -1,9 +1,8 @@
 import { ConfigService } from '@nestjs/config';
-import * as sharp from 'sharp';
+import sharp from 'sharp';
 import { HttpException, InternalServerErrorException } from '@nestjs/common';
 import { fileDelete } from './fileDelete';
 import * as path from 'path';
-import * as fs from 'fs/promises';
 
 export const fileCompress = async (
   file: any,
@@ -12,10 +11,8 @@ export const fileCompress = async (
 ) => {
   try {
     const rootFolder = path.join(process.cwd(), '..', 'storage', newPath);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [name, extension] = file.filename.split('.');
-    // const outputDir = path.join(__dirname, '..', '..', '..'/, 'covers');
-    // const compressedPath = path.join(outputDir, `${name}.webp`);
+    const [name] = file.filename.split('.');
+
     const compressedPath = `${rootFolder}/${name}.webp`;
 
     try {

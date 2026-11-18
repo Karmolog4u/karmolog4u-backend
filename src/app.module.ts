@@ -27,11 +27,13 @@ import { PaymentsModule } from './payments/payments.module';
 import { EventsModule } from './events/events.module';
 import { PublicEducation } from './public/education/education.module';
 import { SendApplicationModule } from './send-application/send-application.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({ validate, envFilePath, isGlobal: true }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
