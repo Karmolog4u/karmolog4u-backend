@@ -120,3 +120,5 @@ export class CoursePurchase {
 
 export const CoursePurchaseSchema =
   SchemaFactory.createForClass(CoursePurchase);
+
+CoursePurchaseSchema.index({ userId: 1, courseId: 1 }, { unique: true });

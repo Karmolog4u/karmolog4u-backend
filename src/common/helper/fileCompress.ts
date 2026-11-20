@@ -1,8 +1,9 @@
 import { ConfigService } from '@nestjs/config';
-import sharp from 'sharp';
+
 import { HttpException, InternalServerErrorException } from '@nestjs/common';
 import { fileDelete } from './fileDelete';
 import * as path from 'path';
+import sharp = require('sharp');
 
 export const fileCompress = async (
   file: any,
@@ -15,14 +16,10 @@ export const fileCompress = async (
 
     const compressedPath = `${rootFolder}/${name}.webp`;
 
-    try {
-      await sharp(file.path)
-        .resize(800) // Змінює ширину до 800 пікселів, зберігаючи співвідношення сторін
-        .webp({ quality: 75 }) // Конвертує в JPEG з якістю 70%
-        .toFile(compressedPath); // Зберігає файл
-    } catch (error) {
-      throw new InternalServerErrorException(error);
-    }
+    await sharp(file.path)
+      .resize(800) // Змінює ширину до 800 пікселів, зберігаючи співвідношення сторін
+      .webp({ quality: 75 }) // Конвертує в JPEG з якістю 70%
+      .toFile(compressedPath); // Зберігає файл
     // Стиснення зображення
 
     // delete from temporary folder
@@ -33,16 +30,12 @@ export const fileCompress = async (
     const coverPath = path.join('covers', `${name}.webp`);
     return `${envValue}${coverPath}`;
   } catch (error) {
-    throw new HttpException(
-      {
-        status: error.status,
-        message: error.response.message,
-        error: error.response.error,
-      },
-      error.status,
-      {
-        cause: error,
-      },
-    );
+    if (error instanceof HttpException) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException('Image compression failed', {
+      cause: error,
+    });
   }
 };

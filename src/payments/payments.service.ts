@@ -334,10 +334,9 @@ export class PaymentsService {
     if (!purchase) {
       throw new BadRequestException('Order not found');
     }
-    const status =
-      purchase.status === PurchaseStatus.APPROVED ? 'accept' : 'reject';
-
     if (purchase.processed) {
+      const status =
+        purchase.status === PurchaseStatus.APPROVED ? 'accept' : 'reject';
       return this.buildCallbackResponse(data.orderReference, status);
     }
 
@@ -345,41 +344,56 @@ export class PaymentsService {
       throw new BadRequestException('Invalid signature');
     }
 
-    purchase.rawResponse = { ...purchase?.rawResponse, ...data };
+    const nextStatus =
+      data.transactionStatus === 'Approved'
+        ? PurchaseStatus.APPROVED
+        : PurchaseStatus.DECLINED;
 
-    switch (data.transactionStatus) {
-      case 'Approved':
-        purchase.status = PurchaseStatus.APPROVED;
-        break;
+    // Atomically claim this callback so concurrent/retried callbacks cannot
+    // both grant the same purchase.
+    const claimedPurchase = await this.purchaseModel.findOneAndUpdate(
+      { _id: purchase._id, processed: { $ne: true } },
+      {
+        $set: {
+          status: nextStatus,
+          processed: true,
+          rawResponse: { ...purchase.rawResponse, ...data },
+        },
+        $unset: { expiresAt: 1 },
+      },
+      { new: true },
+    );
 
-      case 'Declined':
-        purchase.status = PurchaseStatus.DECLINED;
-        break;
-
-      default:
-        purchase.status = PurchaseStatus.DECLINED;
-        break;
+    if (!claimedPurchase) {
+      const latestPurchase = await this.purchaseModel.findById(purchase._id);
+      const status =
+        latestPurchase?.status === PurchaseStatus.APPROVED
+          ? 'accept'
+          : 'reject';
+      return this.buildCallbackResponse(data.orderReference, status);
     }
 
-    if (purchase.productType === 'Gift') {
-      await this.processGiftInfoSending(purchase);
-    } else {
-      await this.processBusinessLogic(purchase);
-    }
-    if (purchase.status === PurchaseStatus.APPROVED) {
-      if (purchase.productType === 'Gift') {
-        await this.processGiftInfoSending(purchase);
-      } else {
-        await this.processBusinessLogic(purchase);
+    try {
+      if (nextStatus === PurchaseStatus.APPROVED) {
+        if (claimedPurchase.productType === 'Gift') {
+          await this.processGiftInfoSending(claimedPurchase);
+        } else {
+          await this.processBusinessLogic(claimedPurchase);
+        }
       }
+    } catch (error) {
+      // Allow the provider retry to finish work if a downstream operation fails.
+      await this.purchaseModel.updateOne(
+        { _id: claimedPurchase._id },
+        { $set: { processed: false } },
+      );
+      throw error;
     }
 
-    purchase.processed = true;
-    purchase.expiresAt = undefined;
-
-    await purchase.save();
-
-    return this.buildCallbackResponse(data.orderReference, status);
+    return this.buildCallbackResponse(
+      data.orderReference,
+      nextStatus === PurchaseStatus.APPROVED ? 'accept' : 'reject',
+    );
   }
 
   async createCoursePayment(courseId: string, user: UserEntity) {
@@ -676,6 +690,7 @@ export class PaymentsService {
     const existingPurchase = await this.purchaseModel.findOne({
       clientEmail: dto.email,
       productId: dto.itemId,
+      status: { $in: [PurchaseStatus.PENDING, PurchaseStatus.APPROVED] },
     });
 
     if (!existingPurchase) {
@@ -820,11 +835,29 @@ export class PaymentsService {
       return;
     }
 
-    await this.productPurchaseModel.create({
-      userId: existingUser._id,
-      productId: purchase.productId,
-      targetModule: purchase.productType,
-    });
+    try {
+      await this.productPurchaseModel.updateOne(
+        { userId: existingUser._id, productId: purchase.productId },
+        {
+          $setOnInsert: {
+            userId: existingUser._id,
+            productId: purchase.productId,
+            targetModule: purchase.productType,
+          },
+        },
+        { upsert: true },
+      );
+    } catch (error) {
+      // A concurrent upsert may win after both requests observe no document.
+      if (
+        typeof error !== 'object' ||
+        error === null ||
+        !('code' in error) ||
+        error.code !== 11000
+      ) {
+        throw error;
+      }
+    }
   }
 
   private async processGiftInfoSending(purchase: PurchaseDocument) {

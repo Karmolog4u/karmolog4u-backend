@@ -40,7 +40,6 @@ export class DriveService {
           and trashed=false
         `;
 
-
     const res = await this.drive.files.list({
       q: query,
       fields: 'files(id, name, mimeType, size)',

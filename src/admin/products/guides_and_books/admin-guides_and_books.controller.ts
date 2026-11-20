@@ -1,7 +1,6 @@
 import { GuidesAndBooksEntity } from './dto/guides_and_books-entity.dto';
 import {
   BadRequestException,
-  NotFoundException,
   Body,
   Controller,
   Get,
@@ -12,6 +11,7 @@ import {
   UseInterceptors,
   UploadedFile,
   HttpException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -116,17 +116,7 @@ export class AdminGuidesAndBooksController {
       }
       return { message: 'Успішно' };
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      this.rethrowError(error);
     }
   }
 
@@ -150,7 +140,7 @@ export class AdminGuidesAndBooksController {
         guidesAndBooksId,
       );
     } catch (error) {
-      throw new NotFoundException('Гайд не знайдено');
+      this.rethrowError(error);
     }
   }
 
@@ -169,7 +159,7 @@ export class AdminGuidesAndBooksController {
     try {
       return await this.adminGuidesAndBooksService.findAllGuidesAndBooks();
     } catch (error) {
-      throw new NotFoundException('Гайди не знайдено');
+      this.rethrowError(error);
     }
   }
 
@@ -251,17 +241,7 @@ export class AdminGuidesAndBooksController {
         );
       }
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      this.rethrowError(error);
     }
   }
 
@@ -285,17 +265,7 @@ export class AdminGuidesAndBooksController {
         guidesAndBooksId,
       );
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      this.rethrowError(error);
     }
   }
 
@@ -322,17 +292,17 @@ export class AdminGuidesAndBooksController {
         status,
       );
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      this.rethrowError(error);
     }
+  }
+
+  private rethrowError(error: unknown): never {
+    if (error instanceof HttpException) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException('Internal server error', {
+      cause: error,
+    });
   }
 }

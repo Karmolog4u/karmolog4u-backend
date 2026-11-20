@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpException,
+  InternalServerErrorException,
   Param,
   Post,
   Res,
@@ -58,16 +59,13 @@ export class CourseController {
     try {
       return await this.courseService.getCourseDetail(user._id, param.id);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Internal server error', {
+        cause: error,
+      });
     }
   }
 
@@ -90,16 +88,13 @@ export class CourseController {
     try {
       return await this.courseService.getLessonsSSK(user._id, param.id);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Internal server error', {
+        cause: error,
+      });
     }
   }
 
@@ -122,15 +117,13 @@ export class CourseController {
     try {
       return await this.courseService.getLessonsList(user._id, param.id);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }
@@ -153,19 +146,15 @@ export class CourseController {
     try {
       return await this.courseService.getLesson(user._id, param.id);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Internal server error', {
+        cause: error,
+      });
     }
   }
-
   @Public()
   @Post('feedback/:id')
   @ApiOperation({ summary: 'Post Feedback' })
@@ -189,16 +178,13 @@ export class CourseController {
     try {
       return await this.courseService.sendFeedback(user, param.id, data);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Internal server error', {
+        cause: error,
+      });
     }
   }
 
@@ -231,40 +217,14 @@ export class CourseController {
       });
 
       certificate.file.stream.pipe(res);
-
-      //cloud storage
-
-      // const stream = certificate.file.stream as NodeJS.ReadableStream;
-      // const metadata = certificate.file.metadata as any;
-      // const name = certificate.certificateFileName;
-
-      // if (metadata && metadata.contentType) {
-      //   res.setHeader('Content-Type', metadata.contentType);
-      // } else {
-      //   res.setHeader('Content-Type', 'application/pdf');
-      // }
-
-      // res.setHeader(
-      //   'Content-Disposition',
-      //   `attachment; filename="${name.split('/').pop()}"`,
-      // );
-
-      // stream.on('error', () => {
-      //   res.status(500).end();
-      // });
-
-      // stream.pipe(res);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status || 500,
-          message: error.response?.message || error.message || 'Error',
-        },
-        error.status || 500,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Internal server error', {
+        cause: error,
+      });
     }
   }
 }

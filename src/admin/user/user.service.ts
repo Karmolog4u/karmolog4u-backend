@@ -194,15 +194,13 @@ export class UserService {
       }
       return user[0];
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }
@@ -280,7 +278,7 @@ export class UserService {
             password: newPassword, // Newly generated password
             loginUrl: `${this.configService.get<string>(
               'FRONT_DOMAIN',
-            )}/auth/login`, // Login page URL
+            )}/cabinet/login`, // Login page URL
             appName: 'Karmolog4u',
             year: new Date().getFullYear(),
           },
@@ -343,7 +341,7 @@ export class UserService {
               password: user.rawPassword, // передаємо в шаблон
               loginUrl: `${this.configService.get<string>(
                 'FRONT_DOMAIN',
-              )}/auth/login`,
+              )}/cabinet/login`,
               appName: 'Karmolog4u',
               year: new Date().getFullYear(),
             },
@@ -357,15 +355,13 @@ export class UserService {
         message: 'Користувачі успішно імпортовані',
       };
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }
@@ -490,7 +486,7 @@ export class UserService {
         password: newPassword, // Newly generated password
         loginUrl: `${this.configService.get<string>(
           'FRONT_DOMAIN',
-        )}/auth/login`, // Login page URL
+        )}/cabinet/login`, // Login page URL
         appName: 'Karmolog4u',
         year: new Date().getFullYear(),
       },

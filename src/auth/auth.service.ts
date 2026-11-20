@@ -74,15 +74,13 @@ export class AuthService {
       }
       return user;
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }
@@ -167,15 +165,13 @@ export class AuthService {
         },
       };
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }
@@ -191,15 +187,13 @@ export class AuthService {
       });
       return { message: 'success' };
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }
@@ -242,15 +236,13 @@ export class AuthService {
       });
       return newToken;
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }
@@ -280,7 +272,7 @@ export class AuthService {
           password: newPassword, // Newly generated password
           loginUrl: `${this.configService.get<string>(
             'FRONT_DOMAIN',
-          )}/auth/login`, // Login page URL
+          )}/cabinet/login`, // Login page URL
           appName: 'Karmolog4u',
           year: new Date().getFullYear(),
         },
@@ -288,15 +280,13 @@ export class AuthService {
 
       return { message: 'success' };
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }
@@ -325,15 +315,13 @@ export class AuthService {
 
       return { message: 'success' };
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }
@@ -367,15 +355,13 @@ export class AuthService {
       );
       return { message: 'success' };
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }

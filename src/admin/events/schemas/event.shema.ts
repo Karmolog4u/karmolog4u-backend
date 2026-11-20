@@ -27,7 +27,7 @@ export class Event {
   cover: string;
 
   @Prop({ type: String, default: '' })
-  eventLink: string;
+  eventLink?: string;
 
   @Prop({ type: String, enum: ['PUBLISHED', 'DRAFT'] })
   status: string;

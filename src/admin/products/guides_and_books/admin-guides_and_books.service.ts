@@ -268,7 +268,8 @@ export class AdminGuidesAndBooksService {
 
       return newGuidesAndBooks;
     } catch (error) {
-      throw new BadRequestException(error._message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
 
@@ -313,14 +314,6 @@ export class AdminGuidesAndBooksService {
       const differenceFiles = hasNewFile
         ? getDifference(oldFiles ?? [], [file])
         : { onlyInArr1: [], onlyInArr2: [], inBoth: [] };
-
-      // if (differenceHomeworkFiles.inBoth.length != 0) {
-      //   const oldFilesIds = differenceHomeworkFiles.inBoth.map((item) =>
-      //     item._id.toString(),
-      //   );
-      //   //save to lesson
-      //   updateData.homeworkFiles = [...oldFilesIds];
-      // }
 
       if (hasNewFile && differenceFiles.onlyInArr1.length != 0) {
         //delete from storage
@@ -375,9 +368,8 @@ export class AdminGuidesAndBooksService {
 
       return { message: 'success' };
     } catch (error) {
-      console.log(error);
-
-      throw new BadRequestException(error._message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
 
@@ -401,7 +393,8 @@ export class AdminGuidesAndBooksService {
       ]);
       return { message: 'Успішно' };
     } catch (error) {
-      throw new BadRequestException(error._message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
 
@@ -446,7 +439,8 @@ export class AdminGuidesAndBooksService {
       ) {
         throw error;
       }
-      throw new BadRequestException(error._message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
 

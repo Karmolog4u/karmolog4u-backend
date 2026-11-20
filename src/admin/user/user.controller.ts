@@ -9,20 +9,19 @@ import {
   Res,
   HttpCode,
   Patch,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
-  ApiNotModifiedResponse,
   ApiOperation,
   ApiParam,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { JoiValidationPipe } from 'src/common/pipes/JoiValidationPipe';
-import { UpdateAdminUserSchema } from './schemas/validation.schemas';
+
 import { UserService } from './user.service';
 import { GetAllUsersResponseDto } from './dto/get-all-user-response.dto';
 import { GetUsersQueryDto } from './dto/get-all-query.dto';
@@ -58,15 +57,13 @@ export class UserController {
     try {
       return await this.userService.getAllUsers(query);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }
@@ -85,15 +82,13 @@ export class UserController {
     try {
       return await this.userService.getUserById(id);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }
@@ -116,15 +111,13 @@ export class UserController {
     try {
       return await this.userService.deleteUsers(data);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }
@@ -145,15 +138,13 @@ export class UserController {
     try {
       return await this.userService.blockUsers(data);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }
@@ -175,15 +166,13 @@ export class UserController {
     try {
       return await this.userService.createUser(data);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }
@@ -203,15 +192,13 @@ export class UserController {
     try {
       return await this.userService.importUsers(data);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }
@@ -228,15 +215,13 @@ export class UserController {
     try {
       await this.userService.exportAllUser(res);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }
@@ -254,15 +239,13 @@ export class UserController {
     try {
       await this.userService.exportUsersByEducation(id, res);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }
@@ -284,15 +267,13 @@ export class UserController {
     try {
       return await this.userService.updateUser(id, data);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Помилка отримання списку уроків',
+        { cause: error },
       );
     }
   }

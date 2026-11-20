@@ -1,4 +1,10 @@
-import { Controller, Get, HttpException, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpException,
+  InternalServerErrorException,
+  Param,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -31,17 +37,13 @@ export class ProductController {
     try {
       return await this.productService.getProductDetails(param.productId);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Internal server error', {
+        cause: error,
+      });
     }
   }
 
@@ -57,17 +59,13 @@ export class ProductController {
     try {
       return await this.productService.getAllProductsWithPrice(user._id);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Internal server error', {
+        cause: error,
+      });
     }
   }
 }

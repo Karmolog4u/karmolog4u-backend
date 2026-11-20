@@ -92,3 +92,12 @@ export class Purchase {
 export const PurchaseSchema = SchemaFactory.createForClass(Purchase);
 
 PurchaseSchema.index({ orderReference: 1 }, { unique: true });
+PurchaseSchema.index(
+  { wayforpayOrderId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      wayforpayOrderId: { $type: 'string' },
+    },
+  },
+);
