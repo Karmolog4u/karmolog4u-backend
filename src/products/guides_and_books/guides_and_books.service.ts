@@ -144,6 +144,7 @@ export class GuidesAndBooksService {
             price: 1,
             cover: 1,
             link: 1,
+            isMarkdown: 1,
             isWaiting: 1,
             discount: {
               $cond: {

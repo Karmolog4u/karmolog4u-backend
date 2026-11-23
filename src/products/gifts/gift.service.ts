@@ -127,6 +127,7 @@ export class GiftService {
             name: 1,
             description: 1,
             cover: 1,
+            isMarkdown: 1,
             price: 1,
             isWaiting: 1,
             discount: {

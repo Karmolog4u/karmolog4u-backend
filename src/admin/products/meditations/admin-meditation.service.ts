@@ -139,6 +139,7 @@ export class AdminMeditationService {
               description: 1,
               video: 1,
               cover: 1,
+              isMarkdown: 1,
               price: 1,
               isWaiting: 1,
               discount: {
@@ -172,7 +173,8 @@ export class AdminMeditationService {
       await newMeditation.save();
       return newMeditation;
     } catch (error) {
-      throw new BadRequestException(error.message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
 
@@ -193,7 +195,8 @@ export class AdminMeditationService {
         .lean()
         .exec();
     } catch (error) {
-      throw new BadRequestException(error._message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
 
@@ -217,7 +220,8 @@ export class AdminMeditationService {
       ]);
       return { message: 'Успішно' };
     } catch (error) {
-      throw new BadRequestException(error._message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
 
@@ -255,7 +259,8 @@ export class AdminMeditationService {
       ) {
         throw error;
       }
-      throw new BadRequestException(error._message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
 

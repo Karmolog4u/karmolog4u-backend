@@ -6,9 +6,17 @@ import { AuthModule } from 'src/auth/auth.module';
 import { MailModule } from 'src/mail/mail.module';
 import { ConfigModule } from '@nestjs/config';
 import { TokenModule } from 'src/token/token.module';
+import { CoursePurchaseModule } from '../coursePurchase/coursePurchase.module';
 
 @Module({
-  imports: [UserMainModule, AuthModule, MailModule, ConfigModule, TokenModule],
+  imports: [
+    UserMainModule,
+    AuthModule,
+    MailModule,
+    ConfigModule,
+    TokenModule,
+    CoursePurchaseModule,
+  ],
   controllers: [UserController],
   providers: [UserService],
 })

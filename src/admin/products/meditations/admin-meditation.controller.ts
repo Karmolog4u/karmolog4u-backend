@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   UploadedFile,
   HttpException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -112,17 +113,11 @@ export class AdminMeditationController {
       }
       return { message: 'Успішно' };
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 
@@ -240,17 +235,11 @@ export class AdminMeditationController {
         );
       }
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 
@@ -270,17 +259,11 @@ export class AdminMeditationController {
       const meditationId = new mongoose.Types.ObjectId(id.toString());
       return await this.adminMeditationService.deleteMeditation(meditationId);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 
@@ -307,17 +290,11 @@ export class AdminMeditationController {
         status,
       );
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 }

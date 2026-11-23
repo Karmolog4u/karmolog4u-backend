@@ -1,5 +1,8 @@
 import * as Joi from 'joi';
-import { Category, Status } from 'src/products/meditations/schemas/meditation.schema';
+import {
+  Category,
+  Status,
+} from 'src/products/meditations/schemas/meditation.schema';
 
 export const newMeditationSchema = Joi.object()
   .keys({
@@ -58,6 +61,9 @@ export const newMeditationSchema = Joi.object()
     }),
     price: Joi.number().optional().messages({
       'number.base': 'price має бути числом',
+    }),
+    isMarkdown: Joi.bool().optional().messages({
+      'bool.base': 'isMarkdown має бути так або ні',
     }),
     status: Joi.string()
       .valid(...Object.values(Status))
@@ -147,6 +153,9 @@ export const updateMeditationSchema = Joi.object()
         'string.empty': 'status не може бути порожнім',
         'any.only': 'status has an invalid value',
       }),
+    isMarkdown: Joi.bool().optional().messages({
+      'bool.base': 'isMarkdown має бути так або ні',
+    }),
     discount: Joi.object()
       .keys({
         discount: Joi.number().optional().messages({

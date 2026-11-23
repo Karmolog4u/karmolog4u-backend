@@ -1,4 +1,10 @@
-import { Controller, Get, HttpException, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpException,
+  InternalServerErrorException,
+  Param,
+} from '@nestjs/common';
 import { ProductPurchaseService } from './productPurchase.service';
 import { Role } from 'src/role/role.enum';
 import { Roles } from 'src/role/roles.decorator';
@@ -37,17 +43,11 @@ export class ProductPurchaseController {
         param.type,
       );
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 }

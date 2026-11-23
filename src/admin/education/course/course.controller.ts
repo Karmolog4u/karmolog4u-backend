@@ -10,6 +10,7 @@ import {
   Controller,
   Get,
   HttpException,
+  InternalServerErrorException,
   Param,
   Patch,
   Post,
@@ -63,17 +64,11 @@ export class CourseController {
     try {
       return await this.courseService.createCourse(data);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера');
     }
   }
 
@@ -98,17 +93,11 @@ export class CourseController {
         status: params.status,
       });
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера');
     }
   }
 
@@ -128,17 +117,11 @@ export class CourseController {
       const courseId = new mongoose.Types.ObjectId(params.id.toString());
       return await this.courseService.getCourseById(courseId);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера');
     }
   }
 
@@ -165,17 +148,11 @@ export class CourseController {
       const courseId = new mongoose.Types.ObjectId(params.id.toString());
       return await this.courseService.updateCourse(courseId, data);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера');
     }
   }
 
@@ -201,17 +178,11 @@ export class CourseController {
       );
       return await this.courseService.deleteCourse(objectIds);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера');
     }
   }
 
@@ -241,17 +212,11 @@ export class CourseController {
         status: data.status,
       });
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера');
     }
   }
 
@@ -270,17 +235,11 @@ export class CourseController {
     try {
       return await this.courseService.getCourseList();
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера');
     }
   }
 }

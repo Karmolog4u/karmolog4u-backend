@@ -141,6 +141,10 @@ export class AdminWebinarsService {
               video: 1,
               cover: 1,
               price: 1,
+              link: 1,
+              detailsDescription: 1,
+              detailsTitle: 1,
+              isMarkdown: 1,
               isWaiting: 1,
               discount: {
                 $cond: {
@@ -172,7 +176,8 @@ export class AdminWebinarsService {
       await newWebinar.save();
       return newWebinar;
     } catch (error) {
-      throw new BadRequestException(error._message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
 
@@ -193,7 +198,8 @@ export class AdminWebinarsService {
         .lean()
         .exec();
     } catch (error) {
-      throw new BadRequestException(error._message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
 
@@ -215,7 +221,8 @@ export class AdminWebinarsService {
       ]);
       return { message: 'Успішно' };
     } catch (error) {
-      throw new BadRequestException(error._message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
 
@@ -253,7 +260,8 @@ export class AdminWebinarsService {
       ) {
         throw error;
       }
-      throw new BadRequestException(error._message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
   async getWebinarList() {

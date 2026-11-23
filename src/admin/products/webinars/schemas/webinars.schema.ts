@@ -108,6 +108,11 @@ export class Webinar {
 
   @Prop({ type: Date, default: null, index: { expires: 0 } })
   expiredAt: Date;
+
+  @Prop({ type: Boolean, default: false })
+  isMarkdown: boolean;
+  @Prop({ type: String })
+  link: string;
 }
 
 export const WebinarSchema = SchemaFactory.createForClass(Webinar);

@@ -8,8 +8,29 @@ import {
   ValidateNested,
   IsBoolean,
   IsOptional,
+  IsEnum,
+  IsMongoId,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+
+class EducationCourseDto {
+  @ApiProperty({
+    description: 'ID курсу',
+    example: '64a872bd92c1d5412830c9a1',
+  })
+  @IsMongoId({ message: 'courseId має бути валідним MongoID' })
+  courseId: string;
+
+  @ApiProperty({
+    description: 'План оплати',
+    enum: ['FULL', 'PARTIAL', 'INSTALLMENT'],
+    example: 'FULL',
+  })
+  @IsEnum(['FULL', 'PARTIAL', 'INSTALLMENT'], {
+    message: 'paymentPlan має бути одним із: FULL, PARTIAL, INSTALLMENT',
+  })
+  paymentPlan: 'FULL' | 'PARTIAL' | 'INSTALLMENT';
+}
 
 export class UserDto {
   @ApiProperty({
@@ -87,4 +108,15 @@ export class ImportUsersDto {
   })
   @IsBoolean({ message: 'verified має бути булевим значенням' })
   verified: boolean;
+  @ApiProperty({
+    type: [EducationCourseDto],
+    description: 'Спільні курси та плани оплати для всіх імпортованих користувачів',
+    required: false,
+    example: [{ courseId: '64a872bd92c1d5412830c9a1', paymentPlan: 'FULL' }],
+  })
+  @IsOptional()
+  @IsArray({ message: 'education має бути масивом' })
+  @ValidateNested({ each: true })
+  @Type(() => EducationCourseDto)
+  education?: EducationCourseDto[];
 }

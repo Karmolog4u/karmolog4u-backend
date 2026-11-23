@@ -10,4 +10,11 @@ export class ChangeStatusGiftDto {
     required: true,
   })
   status: Status;
+  @ApiProperty({
+    type: Boolean,
+    description: 'Чи потрібно використовувати Markdown',
+    example: false,
+    required: true,
+  })
+  isMarkdown: boolean;
 }

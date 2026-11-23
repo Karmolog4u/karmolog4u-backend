@@ -95,7 +95,9 @@ export const newGuidesAndBooksSchema = Joi.object()
       })
       .optional()
       .unknown(false),
-
+    isMarkdown: Joi.bool().optional().messages({
+      'bool.base': 'isMarkdown має бути так або ні',
+    }),
     file: Joi.object()
       .keys({
         savedName: Joi.string().optional().messages({
@@ -197,6 +199,9 @@ export const updateGuidesAndBooksSchema = Joi.object()
       })
       .optional()
       .unknown(false),
+    isMarkdown: Joi.bool().optional().messages({
+      'bool.base': 'isMarkdown має бути так або ні',
+    }),
     file: Joi.object()
       .keys({
         savedName: Joi.string().optional().messages({

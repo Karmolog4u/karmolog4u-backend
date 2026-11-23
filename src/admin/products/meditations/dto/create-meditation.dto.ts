@@ -84,4 +84,11 @@ export class CreateMeditationDto {
     description: 'The image to upload',
   })
   cover?: any; // Поле для файлу
+  @ApiProperty({
+    type: Boolean,
+    description: 'Чи потрібно використовувати Markdown',
+    example: false,
+    required: true,
+  })
+  isMarkdown: boolean;
 }

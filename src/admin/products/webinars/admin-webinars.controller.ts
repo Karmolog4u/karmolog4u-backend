@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   HttpException,
+  InternalServerErrorException,
   NotFoundException,
   Param,
   Patch,
@@ -114,17 +115,11 @@ export class AdminWebinarsController {
       }
       return { message: 'Успішно', cover: createdWebinar.cover };
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 
@@ -240,17 +235,11 @@ export class AdminWebinarsController {
         );
       }
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 
@@ -270,17 +259,11 @@ export class AdminWebinarsController {
       const webinarId = new mongoose.Types.ObjectId(id.toString());
       return await this.adminWebinarService.deleteWebinar(webinarId);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 
@@ -307,17 +290,11 @@ export class AdminWebinarsController {
         status,
       );
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 }

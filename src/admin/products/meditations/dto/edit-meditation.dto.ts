@@ -91,4 +91,11 @@ export class EditMeditationDto {
     required: false, // Поле не обов\'язкове
   })
   cover?: any; // Поле може бути файлом або рядком
+  @ApiProperty({
+    type: Boolean,
+    description: 'Чи потрібно використовувати Markdown',
+    example: false,
+    required: true,
+  })
+  isMarkdown: boolean;
 }

@@ -95,4 +95,11 @@ export class CreateGuidesAndBooksDto {
 
   @ApiPropertyOptional({ type: FileDto })
   file: FileDto;
+  @ApiProperty({
+    type: Boolean,
+    description: 'Чи потрібно використовувати Markdown',
+    example: false,
+    required: true,
+  })
+  isMarkdown: boolean;
 }

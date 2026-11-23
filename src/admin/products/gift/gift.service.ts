@@ -127,6 +127,7 @@ export class GiftService {
               cover: 1,
               price: 1,
               isWaiting: 1,
+              isMarkdown: 1,
               discount: {
                 $cond: {
                   if: { $ne: ['$discount', null] }, // Якщо discount не дорівнює null
@@ -153,7 +154,8 @@ export class GiftService {
       await newGift.save();
       return newGift;
     } catch (error) {
-      throw new BadRequestException(error._message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
 
@@ -167,7 +169,8 @@ export class GiftService {
         .lean()
         .exec();
     } catch (error) {
-      throw new BadRequestException(error._message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
 
@@ -189,7 +192,8 @@ export class GiftService {
       ]);
       return { message: 'Успішно' };
     } catch (error) {
-      throw new BadRequestException(error._message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
   async changeStatusGift(id: IdDto, status: any): Promise<ResponseSuccessDto> {
@@ -201,7 +205,8 @@ export class GiftService {
       );
       return { message: 'Успішно' };
     } catch (error) {
-      throw new BadRequestException(error._message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
 }

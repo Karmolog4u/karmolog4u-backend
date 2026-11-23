@@ -62,6 +62,9 @@ export class Gift {
 
   @Prop({ type: Date, default: null, index: { expires: 0 } })
   expiredAt: Date;
+
+  @Prop({ type: Boolean, default: false })
+  isMarkdown: boolean;
 }
 
 export const GiftSchema = SchemaFactory.createForClass(Gift);

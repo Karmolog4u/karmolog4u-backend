@@ -23,7 +23,8 @@ export class DiscountService {
       await discount.save();
       return { message: 'success' };
     } catch (error) {
-      throw new BadRequestException(error._message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
 
@@ -41,7 +42,8 @@ export class DiscountService {
         })
         .exec();
     } catch (error) {
-      throw new BadRequestException(error._message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
 
@@ -63,7 +65,8 @@ export class DiscountService {
       });
       return { message: 'success' };
     } catch (error) {
-      throw new BadRequestException(error._message + ', Mongo DB');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`${message}, Mongo DB`);
     }
   }
 }

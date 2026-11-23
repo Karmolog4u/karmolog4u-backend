@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpException,
+  InternalServerErrorException,
   Param,
   Patch,
   Post,
@@ -54,17 +55,13 @@ export class CoursePurchaseController {
         data,
       );
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера', {
+        cause: error,
+      });
     }
   }
 
@@ -80,17 +77,13 @@ export class CoursePurchaseController {
     try {
       return await this.coursePurchaseService.getAllUserPurchase(param.userId);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера', {
+        cause: error,
+      });
     }
   }
 
@@ -112,17 +105,13 @@ export class CoursePurchaseController {
         data.status,
       );
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера', {
+        cause: error,
+      });
     }
   }
 
@@ -140,17 +129,13 @@ export class CoursePurchaseController {
         param.purchaseId,
       );
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера', {
+        cause: error,
+      });
     }
   }
 
@@ -168,17 +153,13 @@ export class CoursePurchaseController {
         param.purchaseId,
       );
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера', {
+        cause: error,
+      });
     }
   }
 
@@ -194,54 +175,13 @@ export class CoursePurchaseController {
     try {
       return await this.coursePurchaseService.completeAccess(param.purchaseId);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера', {
+        cause: error,
+      });
     }
   }
-
-  //   @Post('activate-consulting-advanced/:userId')
-  //   @ApiOperation({
-  //     summary: 'Admin Change Status Course Purchase',
-  //     description: 'Access restricted to admins',
-  //   })
-  //   @ApiBody({
-  //     description: 'Upload fields',
-  //     type: ActivateConsultingAdvancedDto,
-  //   })
-  //   @ApiBadRequestResponse({
-  //     description: 'Виникла помилка(',
-  //   })
-  //   async activateConsultingAdvanced(
-  //     @Param() params: UserIdParamDto,
-  //     @Body()
-  //     data: ActivateConsultingAdvancedDto,
-  //   ) {
-  //     try {
-  //       return await this.coursePurchaseService.activateConsultingAdvanced(
-  //         params.userId,
-  //         data.courseId,
-  //       );
-  //     } catch (error) {
-  //       throw new HttpException(
-  //         {
-  //           status: error.status,
-  //           message: error.response.message,
-  //           error: error.response.error,
-  //         },
-  //         error.status,
-  //         {
-  //           cause: error,
-  //         },
-  //       );
-  //     }
-  //   }
 }

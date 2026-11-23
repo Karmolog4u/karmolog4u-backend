@@ -39,6 +39,10 @@ export class CoursePurchaseService {
     courseId: string,
     paymentPlan: 'FULL' | 'PARTIAL' | 'INSTALLMENT',
   ) {
+    console.log('userId: ', userId);
+    console.log('courseId: ', courseId);
+    console.log('paymentPlan: ', paymentPlan);
+    
     const sskTypes = ['SSK_INDEPENDENT', 'SSK_WITH_CURATOR', 'SSK_WITH_SERGIY'];
 
     const advancedTypes = ['ADVANCED', 'CONSULTING'];
@@ -267,17 +271,11 @@ export class CoursePurchaseService {
       }
       return { message: 'success' };
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 
@@ -317,17 +315,11 @@ export class CoursePurchaseService {
 
       return { message: 'success' };
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 
@@ -368,17 +360,11 @@ export class CoursePurchaseService {
       }
       return { message: 'success' };
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
   async completeAccess(purchaseId: string) {
@@ -465,17 +451,11 @@ export class CoursePurchaseService {
 
       return { message: 'success' };
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 }

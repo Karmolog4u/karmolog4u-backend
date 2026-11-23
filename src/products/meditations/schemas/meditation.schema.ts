@@ -1,7 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { PUBLISHED, DRAFT, HIDDEN } from 'src/common/helper/consts';
-import { ARCANES, CLOSED_MEDITATIONS, OPENED_MEDITATIONS } from 'src/common/helper/consts';
+import {
+  ARCANES,
+  CLOSED_MEDITATIONS,
+  OPENED_MEDITATIONS,
+} from 'src/common/helper/consts';
 // import * as mongoose from 'mongoose';
 
 export type MeditationDocument = HydratedDocument<Meditation>;
@@ -87,6 +91,9 @@ export class Meditation {
 
   @Prop({ type: Date, default: null, index: { expires: 0 } })
   expiredAt: Date;
+
+  @Prop({ type: Boolean, default: false })
+  isMarkdown: boolean;
 }
 
 export const MeditationSchema = SchemaFactory.createForClass(Meditation);

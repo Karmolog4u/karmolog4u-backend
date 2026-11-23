@@ -2,12 +2,35 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
   IsBoolean,
+  IsEnum,
   IsEmail,
   IsNotEmpty,
   IsOptional,
+  IsMongoId,
   IsPhoneNumber,
   IsString,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+
+class EducationCourseDto {
+  @ApiProperty({
+    description: 'ID курсу',
+    example: '64a872bd92c1d5412830c9a1',
+  })
+  @IsMongoId({ message: 'courseId має бути валідним MongoID' })
+  courseId: string;
+
+  @ApiProperty({
+    description: 'План оплати',
+    enum: ['FULL', 'PARTIAL', 'INSTALLMENT'],
+    example: 'FULL',
+  })
+  @IsEnum(['FULL', 'PARTIAL', 'INSTALLMENT'], {
+    message: 'paymentPlan має бути одним із: FULL, PARTIAL, INSTALLMENT',
+  })
+  paymentPlan: 'FULL' | 'PARTIAL' | 'INSTALLMENT';
+}
 
 export class CreateUserByAdminDto {
   @ApiProperty({
@@ -45,14 +68,18 @@ export class CreateUserByAdminDto {
   mobPhone: string;
 
   @ApiProperty({
-    type: [String],
-    description: 'Масив ID курсів або освітніх програм',
-    example: ['64a872bd92c1d5412830c9a1', '64a872bd92c1d5412830c9a2'],
+    type: [EducationCourseDto],
+    description: 'Курси та плани оплати, які потрібно додати користувачу',
+    example: [
+      { courseId: '64a872bd92c1d5412830c9a1', paymentPlan: 'FULL' },
+    ],
     required: false,
   })
   @IsOptional()
   @IsArray({ message: 'education має бути масивом' })
-  education?: string[];
+  @ValidateNested({ each: true })
+  @Type(() => EducationCourseDto)
+  education?: EducationCourseDto[];
 
   @ApiProperty({
     type: Boolean,

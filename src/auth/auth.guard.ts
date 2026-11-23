@@ -18,10 +18,6 @@ import { OPTIONAL_AUTH_KEY } from 'src/common/decorators/optional-auth.decorator
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
-    // private jwtService: JwtService,
-    // private configService: ConfigService,
-    // private readonly tokenService: TokenService,
-    // // private readonly userService: UserService,
     private readonly authService: AuthService,
     private reflector: Reflector,
   ) {}
@@ -44,7 +40,6 @@ export class AuthGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
-    // const secret = this.configService.get<string>('JWT_SECRET');
 
     // OPTIONAL AUTH ROUTES
     if (isOptionalAuth) {

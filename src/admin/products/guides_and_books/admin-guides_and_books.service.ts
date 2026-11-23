@@ -173,6 +173,7 @@ export class AdminGuidesAndBooksService {
               name: 1,
               description: 1,
               video: 1,
+              isMarkdown: 1,
               link: 1,
               cover: 1,
               price: 1,

@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   HttpException,
+  InternalServerErrorException,
   NotFoundException,
   Param,
   Patch,
@@ -109,17 +110,11 @@ export class GiftController {
       }
       return { message: 'Успішно' };
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 
@@ -228,17 +223,11 @@ export class GiftController {
         return await this.giftService.editGift(parsedData, giftId);
       }
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 
@@ -258,17 +247,11 @@ export class GiftController {
       const giftId = new mongoose.Types.ObjectId(id.toString());
       return await this.giftService.deleteGift(giftId);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 
@@ -292,17 +275,11 @@ export class GiftController {
       const giftId = new mongoose.Types.ObjectId(id.toString());
       return await this.giftService.changeStatusGift(giftId, status);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 }

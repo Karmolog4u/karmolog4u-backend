@@ -28,6 +28,8 @@ export const newWebinarSchema = Joi.object()
         'any.required': "name є обов'язковим полем",
       })
       .unknown(false),
+    link: Joi.string().uri().optional(),
+
     description: Joi.object()
       .keys({
         ru: Joi.string().allow('').optional().messages({
@@ -78,6 +80,9 @@ export const newWebinarSchema = Joi.object()
       .unknown(false),
     cover: Joi.string().optional().messages({
       'string.base': 'cover має бути рядком',
+    }),
+    isMarkdown: Joi.bool().optional().messages({
+      'bool.base': 'isMarkdown має бути так або ні',
     }),
     price: Joi.number().optional().messages({
       'number.base': 'price має бути числом',
@@ -130,6 +135,8 @@ export const updateWebinarSchema = Joi.object()
       })
       .optional()
       .unknown(false),
+    link: Joi.string().uri().optional(),
+
     description: Joi.object()
       .keys({
         ru: Joi.string().allow('').optional().messages({
@@ -165,6 +172,9 @@ export const updateWebinarSchema = Joi.object()
       .unknown(false),
     isWaiting: Joi.bool().optional().messages({
       'bool.base': 'isWaiting має бути рядком',
+    }),
+    isMarkdown: Joi.bool().optional().messages({
+      'bool.base': 'isMarkdown має бути так або ні',
     }),
     video: Joi.object()
       .keys({

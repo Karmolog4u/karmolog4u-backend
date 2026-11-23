@@ -189,6 +189,7 @@ export class WebinarService {
             name: 1,
             cover: 1,
             price: 1,
+            isMarkdown: 1,
             description: 1,
             detailsDescription: 1,
             detailsTitle: 1,

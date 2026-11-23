@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   HttpException,
@@ -203,7 +204,7 @@ export class UserController {
     }
   }
 
-  @Get('export/all')
+  @Post('export/all')
   @ApiOperation({ summary: 'Export Users' })
   @ApiResponse({
     status: 200,
@@ -226,18 +227,22 @@ export class UserController {
     }
   }
 
-  @Get('export/:id')
-  @ApiOperation({ summary: 'Export user by education id' })
-  @ApiParam({ name: 'id', type: String })
+  @Post('export/list')
+  @ApiOperation({ summary: 'Export user by education ids' })
+  @ApiBody({ type: Array })
   @ApiResponse({
     status: 200,
     description: 'Export users by Admin',
     type: DownloadExcelFileDto,
   })
   @ApiResponse({ status: 400, description: 'Щось пішло не так(' })
-  async exportUsersByEducation(@Param('id') id: string, @Res() res: Response) {
+  async exportUsersByEducation(@Body() ids: string[], @Res() res: Response) {
     try {
-      await this.userService.exportUsersByEducation(id, res);
+      if (!Array.isArray(ids)) {
+        throw new BadRequestException('Очікується масив ID курсів у body');
+      }
+
+      await this.userService.exportUsersByEducation(ids, res);
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;

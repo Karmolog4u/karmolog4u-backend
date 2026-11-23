@@ -109,4 +109,17 @@ export class EditWebinarDto {
     required: false, // Поле не обов\'язкове
   })
   cover?: any; // Поле може бути файлом або рядком
+  @ApiProperty({
+    type: Boolean,
+    description: 'Чи потрібно використовувати Markdown',
+    example: false,
+    required: true,
+  })
+  isMarkdown: boolean;
+  @ApiProperty({
+    type: String,
+    description: 'Звичайне посилання',
+    example: false,
+  })
+  link?: string;
 }

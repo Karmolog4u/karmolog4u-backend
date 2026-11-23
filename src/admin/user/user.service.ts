@@ -7,7 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { Model, PipelineStage } from 'mongoose';
 import { User } from 'src/user/schemas/user.schema';
 import { GetUsersQueryDto } from './dto/get-all-query.dto';
 import { GetAllUsersResponseDto } from './dto/get-all-user-response.dto';
@@ -26,6 +26,7 @@ import { Response } from 'express';
 import { Types } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { TokenService } from 'src/token/token.service';
+import { CoursePurchaseService } from '../coursePurchase/coursePurchase.service';
 
 @Injectable()
 export class UserService {
@@ -35,6 +36,7 @@ export class UserService {
     @Inject(MailService) private mailService: MailService,
     @Inject(TokenService) private tokenService: TokenService,
     private configService: ConfigService,
+    private coursePurchaseService: CoursePurchaseService,
   ) {}
   async getAllUsers(
     query: GetUsersQueryDto,
@@ -257,7 +259,7 @@ export class UserService {
 
   async createUser(data: CreateUserByAdminDto): Promise<ResponseSuccessDto> {
     try {
-      const { education, sendToEmail, ...userData } = data;
+      const { education = [], sendToEmail, ...userData } = data;
       const newPassword = generateUniquePassword(16, {
         includeUppercase: true,
         includeNumbers: true,
@@ -267,6 +269,11 @@ export class UserService {
         ...userData,
         password: newPassword,
       });
+
+      if (education.length > 0) {
+        await this.addEducation(user._id.toString(), education);
+      }
+
       if (sendToEmail) {
         await this.mailService.sendEmail(
           user.email,
@@ -284,94 +291,112 @@ export class UserService {
           },
         );
       }
-      if (education.length >= 1) {
-        //todo add education
-      }
       return { message: 'success' };
     } catch (error) {
       throw new BadRequestException('Щось пішло не так(');
     }
   }
 
+  private async addEducation(
+    userId: string,
+    education: NonNullable<CreateUserByAdminDto['education']>,
+  ): Promise<void> {
+    await Promise.all(
+      education.map(({ courseId, paymentPlan }) =>
+        this.coursePurchaseService.addCoursePurchase(
+          userId,
+          courseId,
+          paymentPlan,
+        ),
+      ),
+    );
+  }
+
   async importUsers(data: ImportUsersDto): Promise<ResponseSuccessDto> {
     try {
-      const emails = data.users.map((u) => u.email.toLowerCase().trim());
+      let importedCount = 0;
+      let skippedCount = 0;
 
-      // Перевірка, чи емейли вже є в базі
-      const existingUsers = await this.userModel
-        .find({ email: { $in: emails } }, { email: 1, _id: 0 })
-        .lean();
+      for (const userData of data.users) {
+        try {
+          const email = userData.email.toLowerCase().trim();
+          const existingUser = await this.userModel.exists({ email });
+          if (existingUser) {
+            skippedCount += 1;
+            continue;
+          }
 
-      if (existingUsers.length > 0) {
-        const existingEmails = existingUsers.map((u) => u.email);
-        throw new BadRequestException({
-          message: `Деякі емейли вже існують у базі ${existingEmails}`,
-        });
-      }
-      const users = await Promise.all(
-        data.users.map(async (user) => {
           const password = generateUniquePassword(16, {
             includeUppercase: true,
             includeNumbers: true,
             includeSymbols: true,
           });
-
           const hashedPassword = await bcrypt.hash(password, 10);
 
-          return {
-            ...user,
-            password: hashedPassword,
-            verified: !!data.verified,
-            rawPassword: password, // якщо потрібно передати для email
-          };
-        }),
-      );
-
-      await this.userModel.insertMany(users);
-
-      // Відправлення емейлів
-      if (data.sendToEmail) {
-        const emailPromises = users.map((user) =>
-          this.mailService.sendEmail(
-            user.email,
-            'Password Recovery',
-            'resetPassword',
+          const [createdUser] = await this.userModel.create([
             {
-              name: user.name,
-              password: user.rawPassword, // передаємо в шаблон
-              loginUrl: `${this.configService.get<string>(
-                'FRONT_DOMAIN',
-              )}/cabinet/login`,
-              appName: 'Karmolog4u',
-              year: new Date().getFullYear(),
+              ...userData,
+              email,
+              education: undefined,
+              password: hashedPassword,
+              verified: !!data.verified,
             },
-          ),
-        );
+          ]);
+          importedCount += 1;
 
-        await Promise.all(emailPromises);
+          if (data.education?.length) {
+            try {
+              await this.addEducation(
+                createdUser._id.toString(),
+                data.education,
+              );
+            } catch {
+              // Keep importing the remaining users if a course purchase fails.
+            }
+          }
+
+          if (data.sendToEmail) {
+            try {
+              await this.mailService.sendEmail(
+                createdUser.email,
+                'Password Recovery',
+                'resetPassword',
+                {
+                  name: createdUser.name,
+                  password,
+                  loginUrl: `${this.configService.get<string>(
+                    'FRONT_DOMAIN',
+                  )}/cabinet/login`,
+                  appName: 'Karmolog4u',
+                  year: new Date().getFullYear(),
+                },
+              );
+            } catch {
+              // Email delivery failure must not stop importing other users.
+            }
+          }
+        } catch {
+          skippedCount += 1;
+        }
       }
 
       return {
-        message: 'Користувачі успішно імпортовані',
+        message: `Імпорт завершено. Додано: ${importedCount}, пропущено: ${skippedCount}`,
       };
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
       }
 
-      throw new InternalServerErrorException(
-        'Помилка отримання списку уроків',
-        { cause: error },
-      );
+      throw new InternalServerErrorException('Помилка імпорту користувачів', {
+        cause: error,
+      });
     }
   }
 
   async exportAllUser(res: Response) {
     try {
-      const users = await this.userModel.find(
-        {},
-        { password: 0, toDelete: 0, expiredAt: 0 },
-      );
+      const users = await this.getUsersForExport();
 
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('Users');
@@ -389,7 +414,7 @@ export class UserService {
         { header: 'Навчання', key: 'education', width: 15 },
       ];
       users.forEach((user) => {
-        worksheet.addRow(user);
+        worksheet.addRow({ ...user, education: user.education.join(', ') });
       });
       res.setHeader(
         'Content-Type',
@@ -404,13 +429,12 @@ export class UserService {
     }
   }
 
-  async exportUsersByEducation(id: string, res: Response) {
+  async exportUsersByEducation(ids: string[], res: Response) {
     try {
-      //todo find users in education
-      const users = await this.userModel.find(
-        {},
-        { password: 0, toDelete: 0, expiredAt: 0 },
-      );
+
+      const courseIds = ids.map((id) => new Types.ObjectId(id));
+
+      const users = await this.getUsersForExport(courseIds);
 
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('Users');
@@ -428,7 +452,7 @@ export class UserService {
         { header: 'Навчання', key: 'education', width: 15 },
       ];
       users.forEach((user) => {
-        worksheet.addRow(user);
+        worksheet.addRow({ ...user, education: user.education.join(', ') });
       });
       res.setHeader(
         'Content-Type',
@@ -439,8 +463,58 @@ export class UserService {
       await workbook.xlsx.write(res);
       res.end();
     } catch (error) {
-      throw new BadRequestException('Щось пішло не так(');
+      console.log(error);
+
+      throw new InternalServerErrorException('Щось пішло не так(');
     }
+  }
+
+  private async getUsersForExport(courseIds?: Types.ObjectId[]) {
+    const pipeline: PipelineStage[] = [
+      {
+        $lookup: {
+          from: 'coursepurchases',
+          localField: '_id',
+          foreignField: 'userId',
+          as: 'coursePurchases',
+        },
+      },
+      {
+        $lookup: {
+          from: 'courses',
+          localField: 'coursePurchases.courseId',
+          foreignField: '_id',
+          as: 'courses',
+        },
+      },
+      ...(courseIds
+        ? [
+            {
+              $match: {
+                'coursePurchases.courseId': { $in: courseIds },
+              },
+            },
+          ]
+        : []),
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          lastName: 1,
+          email: 1,
+          mobPhone: 1,
+          verified: 1,
+          banned: 1,
+          role: 1,
+          lastLogin: 1,
+          education: {
+            $map: { input: '$courses', as: 'course', in: '$$course.name' },
+          },
+        },
+      },
+    ];
+
+    return this.userModel.aggregate(pipeline);
   }
 
   async updateUser(

@@ -20,6 +20,7 @@ import {
   Headers,
   HttpCode,
   HttpException,
+  InternalServerErrorException,
   Ip,
   Post,
   Query,
@@ -70,16 +71,11 @@ export class AuthController {
       await this.authService.singUp(registerUserDto);
       return { message: 'success' };
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера');
     }
   }
 
@@ -119,16 +115,11 @@ export class AuthController {
       const login = await this.authService.singIn(loginUserDto, headersData);
       return login;
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера');
     }
   }
 
@@ -150,16 +141,11 @@ export class AuthController {
     try {
       return await this.authService.singOut(accessToken, user);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера');
     }
   }
 
@@ -190,16 +176,11 @@ export class AuthController {
       const token = refreshToken.split(' ')[1];
       return await this.authService.refreshToken({ token });
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера');
     }
   }
 
@@ -226,16 +207,11 @@ export class AuthController {
     try {
       return await this.authService.resetPassword(data);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера');
     }
   }
 
@@ -256,16 +232,11 @@ export class AuthController {
     try {
       return await this.authService.verifyUser(token);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера');
     }
   }
 
@@ -295,16 +266,11 @@ export class AuthController {
     try {
       return await this.authService.resendVerification(data);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка сервера');
     }
   }
 }

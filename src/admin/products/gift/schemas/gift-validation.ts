@@ -36,6 +36,9 @@ export const newGiftSchema = Joi.object()
     cover: Joi.string().optional().messages({
       'string.base': 'cover має бути рядком',
     }),
+    isMarkdown: Joi.bool().optional().messages({
+      'bool.base': 'isMarkdown має бути так або ні',
+    }),
     price: Joi.number().optional().messages({
       'number.base': 'price має бути числом',
     }),
@@ -110,6 +113,9 @@ export const updateGiftSchema = Joi.object()
         'string.empty': 'status не може бути порожнім',
         'any.only': 'status has an invalid value',
       }),
+    isMarkdown: Joi.bool().optional().messages({
+      'bool.base': 'isMarkdown має бути так або ні',
+    }),
     discount: Joi.object()
       .keys({
         discount: Joi.number().optional().messages({

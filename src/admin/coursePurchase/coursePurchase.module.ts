@@ -10,5 +10,6 @@ import { ModuleModule } from '../education/module/module.module';
   imports: [CourseModule, PurchaseModule, LessonModule, ModuleModule],
   controllers: [CoursePurchaseController],
   providers: [CoursePurchaseService],
+  exports: [CoursePurchaseService],
 })
 export class CoursePurchaseModule {}
