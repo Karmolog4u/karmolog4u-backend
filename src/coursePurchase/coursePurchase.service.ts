@@ -182,29 +182,35 @@ export class CoursePurchaseService {
     return courses;
   }
 
-  async userHasCourse(userId: string, courseId: string): Promise<boolean> {
+  async userHasCourse(
+    userId: string,
+    courseId: string,
+  ): Promise<{ hasCourse: boolean; error: string | null }> {
     const course = await this.coursePurchaseModel.findOne({ userId, courseId });
 
     if (!course) {
-      return false; // користувач не купував курс
+      return { hasCourse: false, error: 'Користувач не має курс' }; // користувач не купував курс
     }
+    if (course.status === 'BLOCKED')
+      return { hasCourse: false, error: 'Доступ до курсу заблоковано' };
+
     if (course.accessType === 'PERMANENT') {
-      return true; // постійний доступ
+      return { hasCourse: true, error: null }; // постійний доступ
     }
 
     const now = Date.now();
 
     // Перевіряємо чи вже можна почати курс (доступ відкрито)
     if (course?.accessStartDate.getTime() > now) {
-      return false; // доступ ще не почався
+      return { hasCourse: false, error: 'Курс ще не доступний' }; // доступ ще не почався
     }
 
     // Перевіряємо чи ще не закінчився доступ
     if (course?.availableTo.getTime() < now) {
-      return false; // доступ закінчено
+      return { hasCourse: false, error: 'Термін дії курсу закінчився' }; // доступ закінчено
     }
 
-    return true; // курс доступний
+    return { hasCourse: true, error: null }; // курс доступний
   }
 
   async getCoursePurchaseData(userId: any, courseId: any) {

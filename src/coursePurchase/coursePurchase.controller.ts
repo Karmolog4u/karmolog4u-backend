@@ -1,4 +1,9 @@
-import { Controller, Get, HttpException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { CoursePurchaseService } from './coursePurchase.service';
 import {
   ApiBearerAuth,
@@ -30,17 +35,11 @@ export class CoursePurchaseController {
     try {
       return await this.coursePurchaseService.getAllCourse(user._id);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 
@@ -56,17 +55,11 @@ export class CoursePurchaseController {
     try {
       return await this.coursePurchaseService.getAchievement(user._id);
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Помилка створення покупки');
     }
   }
 }

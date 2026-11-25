@@ -23,7 +23,6 @@ import { CourseService } from './course.service';
 import { User } from 'src/common/decorators/user.decorator';
 import { UserEntity } from '../dto/user-entity.dto';
 import { HasCourseGuard } from './guard/hasCourseGuard';
-// import { GcsService } from 'src/gcs/gcs.service';
 import { Response } from 'express';
 
 import { IdParams } from './dto/id.dto';
@@ -31,7 +30,6 @@ import { Public } from 'src/common/decorators/isPublic.decorator';
 import { QAArrayDto } from './dto/feedback.dto';
 
 @ApiBearerAuth()
-//@UseGuards(AuthGuard)
 @ApiTags('user-education')
 @Roles(Role.User, Role.Admin)
 @Controller('user/education')

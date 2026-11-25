@@ -20,13 +20,13 @@ export class HasCourseGuard implements CanActivate {
     if (!courseId) throw new ForbiddenException('Курс не знайдено');
 
     // Check if user has this course
-    const hasCourse = await this.coursePurchase.userHasCourse(
+    const { hasCourse, error } = await this.coursePurchase.userHasCourse(
       user._id,
       courseId,
     );
 
     if (!hasCourse) {
-      throw new ForbiddenException('Немає доступу до цього курсу');
+      throw new ForbiddenException(error);
     }
 
     return true; // Authorized

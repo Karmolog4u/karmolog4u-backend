@@ -217,6 +217,9 @@ export class CourseService {
         throw new ForbiddenException('Покупки не знайдено');
       }
 
+      if (purchase.status === 'BLOCKED') {
+        throw new ForbiddenException('Доступ до курсу заблоковано');
+      }
       /*
        * ---------------------------------------------------------
        * Course access
@@ -319,7 +322,9 @@ export class CourseService {
       if (!purchase) {
         throw new ForbiddenException('Покупки не знайдено');
       }
-
+      if (purchase.status === 'BLOCKED') {
+        throw new ForbiddenException('Доступ до курсу заблоковано');
+      }
       /*
        * -------------------------------------------------------
        * Course access
@@ -444,79 +449,6 @@ export class CourseService {
      * =========================================================
      */
     throw new ForbiddenException('Урок має невірно вказане джерело');
-
-    // if (lesson.targetModel === 'Module') {
-    //   if (lesson?.access?.type === 'TO_DATE') {
-    //     if (
-    //       now < lesson?.access.dateStart.getTime() ||
-    //       now > lesson?.access.dateEnd.getTime()
-    //     ) {
-    //       throw new ForbiddenException('Урок не доступний за датою');
-    //     }
-    //   }
-    //   // ---- TARGET: MODULE ----
-    //   const moduleInfo = await this.moduleModel
-    //     .findById(lesson.targetId)
-    //     .lean();
-
-    //   if (!moduleInfo) throw new NotFoundException('Модуль не знайдено');
-
-    //   if (
-    //     now < moduleInfo.access.dateStart.getTime() ||
-    //     now > moduleInfo.access.dateEnd.getTime()
-    //   ) {
-    //     throw new ForbiddenException('Модуль не доступний за датою');
-    //   }
-
-    //   const purchase = await this.coursePurchaseModel.findOne({
-    //     userId,
-    //     courseId: moduleInfo.course,
-    //   });
-
-    //   if (!purchase) throw new ForbiddenException('Покупки не знайдено');
-
-    //   const startOk = now > purchase.accessStartDate.getTime();
-
-    //   const endOk =
-    //     purchase.availableTo === null || now < purchase.availableTo.getTime();
-
-    //   if (!startOk || !endOk) {
-    //     throw new ForbiddenException('Курс ще не розпочався або закінчився');
-    //   }
-    //   return lesson; // ✅ доступ є
-    // }
-
-    // // 3. Check by targetModel
-    // if (lesson.targetModel === 'Course') {
-    //   // ---- TARGET: COURSE ----
-    //   const course = await this.courseModel.findById(lesson.targetId);
-    //   if (!course) {
-    //     throw new NotFoundException('Курс не знайдено');
-    //   }
-    //   const purchase = await this.coursePurchaseModel.findOne({
-    //     userId,
-    //     courseId: course._id,
-    //   });
-
-    //   if (!purchase) throw new NotFoundException('Покупки не знайдено');
-
-    //   if (
-    //     now < purchase.accessStartDate.getTime() ||
-    //     now > purchase.availableTo.getTime()
-    //   ) {
-    //     throw new ForbiddenException('Курс ще не розпочався або закінчився');
-    //   }
-
-    //   if (purchase.paymentPlan === 'PARTIAL') {
-    //     if (purchase.lessonsUnlocked?.some((id) => id.equals(lesson._id))) {
-    //       throw new ForbiddenException('Урок заблокований по частковій оплаті');
-    //     }
-    //   }
-
-    //   return lesson; // ✅ доступ є
-    // }
-
-    // throw new ForbiddenException('Урок має невірно вказане джерело');
   }
 
   async sendFeedback(user: any, id: any, data: any) {
